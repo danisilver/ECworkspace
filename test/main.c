@@ -47,20 +47,31 @@ int setup(void)
 	return 0;
 }
 
+int pulsaciones = 0;
 int loop(void)
 {
 	unsigned int buttons = read_button();
 
 	if (buttons & BUT1) {
-
-		// COMPLETAR: utilizando la interfaz para los leds definida en leds.h
+		led1_off();
+		led2_off();
+		RL.direction = (RL.direction == 0)? 1 : 0;
+		// REVISAR: utilizando la interfaz para los leds definida en leds.h
 		// hay que apagar ambos leds
 		// También hay que comutar la dirección del movimiento del led rotante
 		// representado por el campo direction de la variable RL
 	}
 
 	if (buttons & BUT2) {
-		// COMPLETAR: utilizando la interfaz para los leds definida en leds.h
+		pulsaciones++;
+		if(pulsaciones % 2 == 0)
+			led1_switch();
+		else
+			led2_switch();
+
+		RL.moving = (RL.moving == 0) ? 1 : 0;
+		if(RL.moving) RL.iter = RL.speed;
+		// REVISAR: utilizando la interfaz para los leds definida en leds.h
 		// Incrementar contador de pulsaciones. Si es par, conumtar led1. Si es impar, conmutar el led2.
 		// También hay que comutar el estado de movimiento del led rotante
 		// representado por el campo moving de la variable RL, y en caso de
