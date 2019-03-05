@@ -1,0 +1,6 @@
+eclipse.preferences.version=1
+environment/project/org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.553200012/PATH/delimiter=;
+environment/project/org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.553200012/PATH/operation=replace
+environment/project/org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.553200012/PATH/value=C\:\\Users\\daniel\\Downloads\\EclipseARM\\sourcery-g++-lite-arm-2011.03\\bin;C\:/Users/daniel/Downloads/EclipseARM/eclipse/jre/bin/client;C\:/Users/daniel/Downloads/EclipseARM/eclipse/jre/bin;C\:/Users/daniel/Downloads/EclipseARM/eclipse/jre/lib/i386;C\:\\ProgramData\\Oracle\\Java\\javapath;C\:\\Windows\\system32;C\:\\Windows;C\:\\Windows\\System32\\Wbem;C\:\\Windows\\System32\\WindowsPowerShell\\v1.0\\;C\:\\Windows\\System32\\OpenSSH\\;C\:\\Program Files\\Git\\cmd;C\:\\Users\\daniel\\AppData\\Local\\Microsoft\\WindowsApps;C\:\\Users\\daniel\\Downloads\\EclipseARM\\eclipse
+environment/project/org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.553200012/append=true
+environment/project/org.eclipse.cdt.cross.arm.gnu.sourcery.windows.elf.debug.553200012/appendContributed=true

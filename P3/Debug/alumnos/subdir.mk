@@ -4,14 +4,6 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../alumnos/._D8Led.c \
-../alumnos/._button.c \
-../alumnos/._intcontroller.c \
-../alumnos/._keyboard.c \
-../alumnos/._leds.c \
-../alumnos/._main.c \
-../alumnos/._timer.c \
-../alumnos/._utils.c \
 ../alumnos/D8Led.c \
 ../alumnos/button.c \
 ../alumnos/gpio.c \
@@ -23,19 +15,9 @@ C_SRCS += \
 ../alumnos/utils.c 
 
 S_UPPER_SRCS += \
-../alumnos/._init.S \
 ../alumnos/init.S 
 
 OBJS += \
-./alumnos/._D8Led.o \
-./alumnos/._button.o \
-./alumnos/._init.o \
-./alumnos/._intcontroller.o \
-./alumnos/._keyboard.o \
-./alumnos/._leds.o \
-./alumnos/._main.o \
-./alumnos/._timer.o \
-./alumnos/._utils.o \
 ./alumnos/D8Led.o \
 ./alumnos/button.o \
 ./alumnos/gpio.o \
@@ -48,14 +30,6 @@ OBJS += \
 ./alumnos/utils.o 
 
 C_DEPS += \
-./alumnos/._D8Led.d \
-./alumnos/._button.d \
-./alumnos/._intcontroller.d \
-./alumnos/._keyboard.d \
-./alumnos/._leds.d \
-./alumnos/._main.d \
-./alumnos/._timer.d \
-./alumnos/._utils.d \
 ./alumnos/D8Led.d \
 ./alumnos/button.d \
 ./alumnos/gpio.d \
@@ -67,7 +41,6 @@ C_DEPS += \
 ./alumnos/utils.d 
 
 S_UPPER_DEPS += \
-./alumnos/._init.d \
 ./alumnos/init.d 
 
 

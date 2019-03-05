@@ -7,6 +7,7 @@
 #include "timer.h"
 #include "gpio.h"
 #include "keyboard.h"
+#include "uart.h"
 
 #define N 4 //Tamaño del buffer tmrbuffer
 #define M 128 //Tamaño del buffer readlineBuf que se pasa como parámetro a la rutina readline
@@ -261,7 +262,8 @@ int loop(void)
 
 				//Codigo de la parte 1
 				
-			} while (/*permanecer en el while mientras se hayan pulsado menos de 4 teclas*/);
+				/*permanecer en el while mientras se hayan pulsado menos de 4 teclas*/
+			} while (1);
 
 			//COMPLETAR: Pasar al estado siguiente
 
@@ -301,7 +303,8 @@ int loop(void)
 				 *    una E (digito 14) en el display de 8 segmentos y esperamos
 				 *    1 segundo con Delay.
 				 */
-			} while (/* Mientras leamos menos de 4 caracteres*/);
+				/* Mientras leamos menos de 4 caracteres*/
+			} while (1);
 
 			/* COMPLETAR: debemos copiar los 4 últimos caracteres de readline en
 			 * el buffer guess, haciendo la conversión de ascii-hexadecimal a valor 

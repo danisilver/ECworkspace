@@ -44,7 +44,7 @@ all: P3.elf secondary-outputs
 P3.elf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: ARM Sourcery Windows GCC C Linker'
-	arm-none-eabi-gcc -nostartfiles -Wl,-Map,P3.map -mcpu=arm7tdmi -g3 -gdwarf-2 -o "P3.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-gcc -T"C:\Users\daniel\Downloads\EclipseARM\workspace\P4\alumnos\ld_script.ld" -nostartfiles -Wl,-Map,P3.map -mcpu=arm7tdmi -g3 -gdwarf-2 -o "P3.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

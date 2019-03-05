@@ -8,7 +8,6 @@ RM := cs-rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include parte2/subdir.mk
 -include parte1/subdir.mk
 -include subdir.mk
 -include objects.mk

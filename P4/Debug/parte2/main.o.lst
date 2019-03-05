@@ -1,0 +1,1019 @@
+   1              		.cpu arm7tdmi
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 6
+  10              		.eabi_attribute 18, 4
+  11              		.file	"main.c"
+  21              	.Ltext0:
+  22              		.file 1 "../parte2/main.c"
+ 2763              		.align	2
+ 2764              	keyBuffer:
+ 2765 0000 00000000 		.space	4
+ 2766              		.align	2
+ 2767              	keyCount:
+ 2768 0004 00000000 		.space	4
+ 2769              		.align	2
+ 2770              	tmrBuffer:
+ 2771 0008 00000000 		.space	4
+ 2772              		.align	2
+ 2773              	tmrBuffSize:
+ 2774 000c 00000000 		.space	4
+ 2775              		.align	2
+ 2776              	passwd:
+ 2777 0010 00000000 		.space	4
+ 2778              		.align	2
+ 2779              	guess:
+ 2780 0014 00000000 		.space	4
+ 2781              		.comm	readlineBuf,128,4
+ 2782              		.global	uconf
+ 2783              		.data
+ 2784              		.align	2
+ 2787              	uconf:
+ 2788 0000 00       		.byte	0
+ 2789 0001 00       		.byte	0
+ 2790 0002 01       		.byte	1
+ 2791 0003 03       		.byte	3
+ 2792 0004 01       		.byte	1
+ 2793 0005 000000   		.space	3
+ 2794 0008 00C20100 		.word	115200
+ 2795              		.comm	gstate,1,1
+ 2796              		.text
+ 2797              		.align	2
+ 2799              	push_buffer:
+ 2800              	.LFB0:
+   1:../parte2/main.c **** #include <stdio.h>
+   2:../parte2/main.c **** #include "44b.h"
+   3:../parte2/main.c **** #include "leds.h"
+   4:../parte2/main.c **** #include "utils.h"
+   5:../parte2/main.c **** #include "D8Led.h"
+   6:../parte2/main.c **** #include "intcontroller.h"
+   7:../parte2/main.c **** #include "timer.h"
+   8:../parte2/main.c **** #include "gpio.h"
+   9:../parte2/main.c **** #include "keyboard.h"
+  10:../parte2/main.c **** #include "uart.h"
+  11:../parte2/main.c **** 
+  12:../parte2/main.c **** #define N 4 //Tamaño del buffer tmrbuffer
+  13:../parte2/main.c **** #define M 128 //Tamaño del buffer readlineBuf que se pasa como parámetro a la rutina readline
+  14:../parte2/main.c **** 
+  15:../parte2/main.c **** /* Variables para la gestión de la ISR del teclado
+  16:../parte2/main.c ****  * 
+  17:../parte2/main.c ****  * Keybuffer: puntero que apuntará al buffer en el que la ISR del teclado debe
+  18:../parte2/main.c ****  *            almacenar las teclas pulsadas
+  19:../parte2/main.c ****  * keyCount: variable en el que la ISR del teclado almacenará el número de teclas pulsadas
+  20:../parte2/main.c ****  */
+  21:../parte2/main.c **** volatile static char *keyBuffer = NULL;
+  22:../parte2/main.c **** volatile static int keyCount = 0;
+  23:../parte2/main.c **** 
+  24:../parte2/main.c **** /* Variables para la gestion de la ISR del timer
+  25:../parte2/main.c ****  * 
+  26:../parte2/main.c ****  * tmrbuffer: puntero que apuntará al buffer que contendrá los dígitos que la ISR del
+  27:../parte2/main.c ****  *            timer debe mostrar en el display de 8 segmentos
+  28:../parte2/main.c ****  * tmrBuffSize: usado por printD8Led para indicar el tamaño del buffer a mostrar
+  29:../parte2/main.c ****  */
+  30:../parte2/main.c **** volatile static char *tmrBuffer = NULL;
+  31:../parte2/main.c **** volatile static int tmrBuffSize = 0;
+  32:../parte2/main.c **** 
+  33:../parte2/main.c **** //Variables globales para la gestión del juego
+  34:../parte2/main.c **** static char passwd[N];  //Buffer para guardar la clave inicial
+  35:../parte2/main.c **** static char guess[N];   //Buffer para guardar la segunda clave
+  36:../parte2/main.c **** char readlineBuf[M];    //Buffer para guardar la linea leída del puerto serie
+  37:../parte2/main.c **** 
+  38:../parte2/main.c **** //Configuración de la uart
+  39:../parte2/main.c **** struct ulconf uconf = {
+  40:../parte2/main.c **** 	.ired = OFF,
+  41:../parte2/main.c **** 	.par  = NONE,
+  42:../parte2/main.c **** 	.stopb = 1,
+  43:../parte2/main.c **** 	.wordlen = EIGHT,
+  44:../parte2/main.c **** 	.echo = ON,
+  45:../parte2/main.c **** 	.baud    = 115200,
+  46:../parte2/main.c **** };
+  47:../parte2/main.c **** 
+  48:../parte2/main.c **** enum state {
+  49:../parte2/main.c **** 	INIT = 0,     //Init:       Inicio del juego
+  50:../parte2/main.c **** 	SPWD = 1,     //Show Pwd:   Mostrar password
+  51:../parte2/main.c **** 	DOGUESS = 2,  //Do guess:   Adivinar contraseña
+  52:../parte2/main.c **** 	SGUESS = 3,   //Show guess: Mostrar el intento
+  53:../parte2/main.c **** 	GOVER = 4     //Game Over:  Mostrar el resultado
+  54:../parte2/main.c **** };
+  55:../parte2/main.c **** enum state gstate; //estado/fase del juego 
+  56:../parte2/main.c **** 
+  57:../parte2/main.c **** //COMPLETAR: Declaración adelantada de las ISRs de timer y teclado (las marca como ISRs)
+  58:../parte2/main.c **** // Código de la parte1
+  59:../parte2/main.c **** 
+  60:../parte2/main.c **** 
+  61:../parte2/main.c **** // Función que va guardando las teclas pulsadas
+  62:../parte2/main.c **** static void push_buffer(char *buffer, int key)
+  63:../parte2/main.c **** {
+ 2801              		.loc 1 63 0
+ 2802              		.cfi_startproc
+ 2803              		@ Function supports interworking.
+ 2804              		@ args = 0, pretend = 0, frame = 16
+ 2805              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2806 0000 0DC0A0E1 		mov	ip, sp
+ 2807              	.LCFI0:
+ 2808              		.cfi_def_cfa_register 12
+ 2809 0004 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 2810 0008 04B04CE2 		sub	fp, ip, #4
+ 2811              		.cfi_offset 14, -8
+ 2812              		.cfi_offset 13, -12
+ 2813              		.cfi_offset 11, -16
+ 2814              	.LCFI1:
+ 2815              		.cfi_def_cfa 11, 4
+ 2816 000c 10D04DE2 		sub	sp, sp, #16
+ 2817 0010 18000BE5 		str	r0, [fp, #-24]
+ 2818 0014 1C100BE5 		str	r1, [fp, #-28]
+  64:../parte2/main.c **** 	int i;
+  65:../parte2/main.c **** 	for (i=0; i < N-1; i++)
+ 2819              		.loc 1 65 0
+ 2820 0018 0030A0E3 		mov	r3, #0
+ 2821 001c 10300BE5 		str	r3, [fp, #-16]
+ 2822 0020 0B0000EA 		b	.L2
+ 2823              	.L3:
+  66:../parte2/main.c **** 		buffer[i] = buffer[i+1];
+ 2824              		.loc 1 66 0 discriminator 2
+ 2825 0024 10301BE5 		ldr	r3, [fp, #-16]
+ 2826 0028 18201BE5 		ldr	r2, [fp, #-24]
+ 2827 002c 033082E0 		add	r3, r2, r3
+ 2828 0030 10201BE5 		ldr	r2, [fp, #-16]
+ 2829 0034 012082E2 		add	r2, r2, #1
+ 2830 0038 18101BE5 		ldr	r1, [fp, #-24]
+ 2831 003c 022081E0 		add	r2, r1, r2
+ 2832 0040 0020D2E5 		ldrb	r2, [r2, #0]	@ zero_extendqisi2
+ 2833 0044 0020C3E5 		strb	r2, [r3, #0]
+  65:../parte2/main.c **** 	for (i=0; i < N-1; i++)
+ 2834              		.loc 1 65 0 discriminator 2
+ 2835 0048 10301BE5 		ldr	r3, [fp, #-16]
+ 2836 004c 013083E2 		add	r3, r3, #1
+ 2837 0050 10300BE5 		str	r3, [fp, #-16]
+ 2838              	.L2:
+  65:../parte2/main.c **** 	for (i=0; i < N-1; i++)
+ 2839              		.loc 1 65 0 is_stmt 0 discriminator 1
+ 2840 0054 10301BE5 		ldr	r3, [fp, #-16]
+ 2841 0058 020053E3 		cmp	r3, #2
+ 2842 005c F0FFFFDA 		ble	.L3
+  67:../parte2/main.c **** 	buffer[N-1] = (char) key;
+ 2843              		.loc 1 67 0 is_stmt 1
+ 2844 0060 18301BE5 		ldr	r3, [fp, #-24]
+ 2845 0064 033083E2 		add	r3, r3, #3
+ 2846 0068 1C201BE5 		ldr	r2, [fp, #-28]
+ 2847 006c FF2002E2 		and	r2, r2, #255
+ 2848 0070 0020C3E5 		strb	r2, [r3, #0]
+  68:../parte2/main.c **** }
+ 2849              		.loc 1 68 0
+ 2850 0074 0CD04BE2 		sub	sp, fp, #12
+ 2851 0078 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 2852 007c 1EFF2FE1 		bx	lr
+ 2853              		.cfi_endproc
+ 2854              	.LFE0:
+ 2856              		.align	2
+ 2857              		.global	timer_ISR
+ 2859              	timer_ISR:
+ 2860              	.LFB1:
+  69:../parte2/main.c **** 
+  70:../parte2/main.c **** void timer_ISR(void)
+  71:../parte2/main.c **** {
+ 2861              		.loc 1 71 0
+ 2862              		.cfi_startproc
+ 2863              		@ Function supports interworking.
+ 2864              		@ args = 0, pretend = 0, frame = 0
+ 2865              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2866 0080 0DC0A0E1 		mov	ip, sp
+ 2867              	.LCFI2:
+ 2868              		.cfi_def_cfa_register 12
+ 2869 0084 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 2870 0088 04B04CE2 		sub	fp, ip, #4
+ 2871              		.cfi_offset 14, -8
+ 2872              		.cfi_offset 13, -12
+ 2873              		.cfi_offset 11, -16
+ 2874              	.LCFI3:
+ 2875              		.cfi_def_cfa 11, 4
+  72:../parte2/main.c **** 	static int pos = 0; //contador para llevar la cuenta del dígito del buffer que toca mostrar
+  73:../parte2/main.c **** 
+  74:../parte2/main.c ****     //COMPLETAR: Visualizar el dígito en la posición pos del buffer tmrBuffer en el display
+  75:../parte2/main.c **** 
+  76:../parte2/main.c **** 	// Código de la parte1
+  77:../parte2/main.c **** 	
+  78:../parte2/main.c **** 	// COMPLETAR: Finalizar correctamente la ISR
+  79:../parte2/main.c **** 	
+  80:../parte2/main.c **** 	// Código de la parte1
+  81:../parte2/main.c **** }
+ 2876              		.loc 1 81 0
+ 2877 008c 0CD04BE2 		sub	sp, fp, #12
+ 2878 0090 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 2879 0094 1EFF2FE1 		bx	lr
+ 2880              		.cfi_endproc
+ 2881              	.LFE1:
+ 2883              		.align	2
+ 2884              		.global	printD8Led
+ 2886              	printD8Led:
+ 2887              	.LFB2:
+  82:../parte2/main.c **** 
+  83:../parte2/main.c **** void printD8Led(char *buffer, int size)
+  84:../parte2/main.c **** {
+ 2888              		.loc 1 84 0
+ 2889              		.cfi_startproc
+ 2890              		@ Function supports interworking.
+ 2891              		@ args = 0, pretend = 0, frame = 8
+ 2892              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2893 0098 0DC0A0E1 		mov	ip, sp
+ 2894              	.LCFI4:
+ 2895              		.cfi_def_cfa_register 12
+ 2896 009c 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 2897 00a0 04B04CE2 		sub	fp, ip, #4
+ 2898              		.cfi_offset 14, -8
+ 2899              		.cfi_offset 13, -12
+ 2900              		.cfi_offset 11, -16
+ 2901              	.LCFI5:
+ 2902              		.cfi_def_cfa 11, 4
+ 2903 00a4 08D04DE2 		sub	sp, sp, #8
+ 2904 00a8 10000BE5 		str	r0, [fp, #-16]
+ 2905 00ac 14100BE5 		str	r1, [fp, #-20]
+  85:../parte2/main.c **** 	//Esta rutina prepara el buffer que debe usar timer_ISR (tmrBuffer)
+  86:../parte2/main.c **** 	tmrBuffer = buffer;
+ 2906              		.loc 1 86 0
+ 2907 00b0 10201BE5 		ldr	r2, [fp, #-16]
+ 2908 00b4 18309FE5 		ldr	r3, .L6
+ 2909 00b8 002083E5 		str	r2, [r3, #0]
+  87:../parte2/main.c **** 	tmrBuffSize = size;
+ 2910              		.loc 1 87 0
+ 2911 00bc 14309FE5 		ldr	r3, .L6+4
+ 2912 00c0 14201BE5 		ldr	r2, [fp, #-20]
+ 2913 00c4 002083E5 		str	r2, [r3, #0]
+  88:../parte2/main.c **** 	
+  89:../parte2/main.c **** 	//COMPLETAR: Arrancar el TIMER0 
+  90:../parte2/main.c **** 	
+  91:../parte2/main.c **** 	// Código de la parte1
+  92:../parte2/main.c **** 
+  93:../parte2/main.c **** 	//COMPLETAR: Esperar a que timer_ISR termine (tmrBuffer)
+  94:../parte2/main.c **** 	
+  95:../parte2/main.c **** 	// Código de la parte1
+  96:../parte2/main.c **** }
+ 2914              		.loc 1 96 0
+ 2915 00c8 0CD04BE2 		sub	sp, fp, #12
+ 2916 00cc 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 2917 00d0 1EFF2FE1 		bx	lr
+ 2918              	.L7:
+ 2919              		.align	2
+ 2920              	.L6:
+ 2921 00d4 08000000 		.word	tmrBuffer
+ 2922 00d8 0C000000 		.word	tmrBuffSize
+ 2923              		.cfi_endproc
+ 2924              	.LFE2:
+ 2926              		.align	2
+ 2927              		.global	keyboard_ISR
+ 2929              	keyboard_ISR:
+ 2930              	.LFB3:
+  97:../parte2/main.c **** 
+  98:../parte2/main.c **** void keyboard_ISR(void)
+  99:../parte2/main.c **** {
+ 2931              		.loc 1 99 0
+ 2932              		.cfi_startproc
+ 2933              		@ Function supports interworking.
+ 2934              		@ args = 0, pretend = 0, frame = 8
+ 2935              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2936 00dc 0DC0A0E1 		mov	ip, sp
+ 2937              	.LCFI6:
+ 2938              		.cfi_def_cfa_register 12
+ 2939 00e0 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 2940 00e4 04B04CE2 		sub	fp, ip, #4
+ 2941              		.cfi_offset 14, -8
+ 2942              		.cfi_offset 13, -12
+ 2943              		.cfi_offset 11, -16
+ 2944              	.LCFI7:
+ 2945              		.cfi_def_cfa 11, 4
+ 2946 00e8 08D04DE2 		sub	sp, sp, #8
+ 100:../parte2/main.c **** 	int key;
+ 101:../parte2/main.c **** 
+ 102:../parte2/main.c **** 	/* Eliminar rebotes de presión */
+ 103:../parte2/main.c **** 	Delay(200);
+ 2947              		.loc 1 103 0
+ 2948 00ec C800A0E3 		mov	r0, #200
+ 2949 00f0 FEFFFFEB 		bl	Delay
+ 104:../parte2/main.c **** 
+ 105:../parte2/main.c **** 	/* Escaneo de tecla */
+ 106:../parte2/main.c **** 	// COMPLETAR
+ 107:../parte2/main.c **** 
+ 108:../parte2/main.c **** 	// Código de la parte1
+ 109:../parte2/main.c **** 
+ 110:../parte2/main.c **** 	if (key != -1) {
+ 2950              		.loc 1 110 0
+ 2951 00f4 10301BE5 		ldr	r3, [fp, #-16]
+ 2952 00f8 010073E3 		cmn	r3, #1
+ 2953 00fc 0500000A 		beq	.L9
+ 111:../parte2/main.c **** 		//COMPLETAR:
+ 112:../parte2/main.c **** 
+ 113:../parte2/main.c **** 		// Código de la parte1
+ 114:../parte2/main.c **** 		
+ 115:../parte2/main.c **** 		/* Esperar a que la tecla se suelte, consultando el registro de datos rPDATG */		
+ 116:../parte2/main.c **** 		while (!(rPDATG & 0x02));
+ 2954              		.loc 1 116 0
+ 2955 0100 0000A0E1 		mov	r0, r0	@ nop
+ 2956              	.L10:
+ 2957              		.loc 1 116 0 is_stmt 0 discriminator 1
+ 2958 0104 20309FE5 		ldr	r3, .L11
+ 2959 0108 003093E5 		ldr	r3, [r3, #0]
+ 2960 010c 023003E2 		and	r3, r3, #2
+ 2961 0110 000053E3 		cmp	r3, #0
+ 2962 0114 FAFFFF0A 		beq	.L10
+ 2963              	.L9:
+ 117:../parte2/main.c **** 	}
+ 118:../parte2/main.c **** 
+ 119:../parte2/main.c **** 	/* Eliminar rebotes de depresión */
+ 120:../parte2/main.c **** 	Delay(200);
+ 2964              		.loc 1 120 0 is_stmt 1
+ 2965 0118 C800A0E3 		mov	r0, #200
+ 2966 011c FEFFFFEB 		bl	Delay
+ 121:../parte2/main.c **** 
+ 122:../parte2/main.c **** 	//COMPLETAR: Finalizar correctamente la ISR
+ 123:../parte2/main.c **** 
+ 124:../parte2/main.c **** 	// Código de la parte1
+ 125:../parte2/main.c **** }
+ 2967              		.loc 1 125 0
+ 2968 0120 0CD04BE2 		sub	sp, fp, #12
+ 2969 0124 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 2970 0128 1EFF2FE1 		bx	lr
+ 2971              	.L12:
+ 2972              		.align	2
+ 2973              	.L11:
+ 2974 012c 4400D201 		.word	30539844
+ 2975              		.cfi_endproc
+ 2976              	.LFE3:
+ 2978              		.align	2
+ 2979              		.global	read_kbd
+ 2981              	read_kbd:
+ 2982              	.LFB4:
+ 126:../parte2/main.c **** 
+ 127:../parte2/main.c **** int read_kbd(char *buffer)
+ 128:../parte2/main.c **** {
+ 2983              		.loc 1 128 0
+ 2984              		.cfi_startproc
+ 2985              		@ Function supports interworking.
+ 2986              		@ args = 0, pretend = 0, frame = 8
+ 2987              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2988 0130 0DC0A0E1 		mov	ip, sp
+ 2989              	.LCFI8:
+ 2990              		.cfi_def_cfa_register 12
+ 2991 0134 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 2992 0138 04B04CE2 		sub	fp, ip, #4
+ 2993              		.cfi_offset 14, -8
+ 2994              		.cfi_offset 13, -12
+ 2995              		.cfi_offset 11, -16
+ 2996              	.LCFI9:
+ 2997              		.cfi_def_cfa 11, 4
+ 2998 013c 08D04DE2 		sub	sp, sp, #8
+ 2999 0140 10000BE5 		str	r0, [fp, #-16]
+ 129:../parte2/main.c **** 	//Esta rutina prepara el buffer en el que keyboard_ISR almacenará las teclas 
+ 130:../parte2/main.c **** 	//pulsadas (keyBuffer) y pone a 0 el contador de teclas pulsadas
+ 131:../parte2/main.c **** 	keyBuffer = buffer;
+ 3000              		.loc 1 131 0
+ 3001 0144 10201BE5 		ldr	r2, [fp, #-16]
+ 3002 0148 1C309FE5 		ldr	r3, .L14
+ 3003 014c 002083E5 		str	r2, [r3, #0]
+ 132:../parte2/main.c **** 	keyCount = 0;
+ 3004              		.loc 1 132 0
+ 3005 0150 18309FE5 		ldr	r3, .L14+4
+ 3006 0154 0020A0E3 		mov	r2, #0
+ 3007 0158 002083E5 		str	r2, [r3, #0]
+ 133:../parte2/main.c **** 
+ 134:../parte2/main.c **** 	//COMPLETAR: Habilitar interrupciones por teclado
+ 135:../parte2/main.c **** 
+ 136:../parte2/main.c **** 	// Código de la parte1
+ 137:../parte2/main.c **** 	
+ 138:../parte2/main.c **** 	//COMPLETAR: Esperar a que keyboard_ISR indique que se ha terminado de
+ 139:../parte2/main.c **** 	//introducir la clave (keyBuffer)
+ 140:../parte2/main.c **** 
+ 141:../parte2/main.c **** 	// Código de la parte1
+ 142:../parte2/main.c **** 	
+ 143:../parte2/main.c **** 	//COMPLETAR: Devolver número de teclas pulsadas
+ 144:../parte2/main.c **** 	
+ 145:../parte2/main.c **** 	// Código de la parte1
+ 146:../parte2/main.c **** }
+ 3008              		.loc 1 146 0
+ 3009 015c 0300A0E1 		mov	r0, r3
+ 3010 0160 0CD04BE2 		sub	sp, fp, #12
+ 3011 0164 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 3012 0168 1EFF2FE1 		bx	lr
+ 3013              	.L15:
+ 3014              		.align	2
+ 3015              	.L14:
+ 3016 016c 00000000 		.word	keyBuffer
+ 3017 0170 04000000 		.word	keyCount
+ 3018              		.cfi_endproc
+ 3019              	.LFE4:
+ 3021              		.align	2
+ 3022              		.global	readline
+ 3024              	readline:
+ 3025              	.LFB5:
+ 147:../parte2/main.c **** 
+ 148:../parte2/main.c **** int readline(char *buffer, int size)
+ 149:../parte2/main.c **** {
+ 3026              		.loc 1 149 0
+ 3027              		.cfi_startproc
+ 3028              		@ Function supports interworking.
+ 3029              		@ args = 0, pretend = 0, frame = 16
+ 3030              		@ frame_needed = 1, uses_anonymous_args = 0
+ 3031 0174 0DC0A0E1 		mov	ip, sp
+ 3032              	.LCFI10:
+ 3033              		.cfi_def_cfa_register 12
+ 3034 0178 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 3035 017c 04B04CE2 		sub	fp, ip, #4
+ 3036              		.cfi_offset 14, -8
+ 3037              		.cfi_offset 13, -12
+ 3038              		.cfi_offset 11, -16
+ 3039              	.LCFI11:
+ 3040              		.cfi_def_cfa 11, 4
+ 3041 0180 10D04DE2 		sub	sp, sp, #16
+ 3042 0184 18000BE5 		str	r0, [fp, #-24]
+ 3043 0188 1C100BE5 		str	r1, [fp, #-28]
+ 150:../parte2/main.c **** 	int count = 0; //cuenta del número de bytes leidos
+ 3044              		.loc 1 150 0
+ 3045 018c 0030A0E3 		mov	r3, #0
+ 3046 0190 10300BE5 		str	r3, [fp, #-16]
+ 151:../parte2/main.c **** 	char c;        //variable para almacenar el carácter leído
+ 152:../parte2/main.c **** 
+ 153:../parte2/main.c **** 	if (size == 0)
+ 3047              		.loc 1 153 0
+ 3048 0194 1C301BE5 		ldr	r3, [fp, #-28]
+ 3049 0198 000053E3 		cmp	r3, #0
+ 3050 019c 0100001A 		bne	.L17
+ 154:../parte2/main.c **** 		return 0;
+ 3051              		.loc 1 154 0
+ 3052 01a0 0030A0E3 		mov	r3, #0
+ 3053 01a4 000000EA 		b	.L18
+ 3054              	.L17:
+ 155:../parte2/main.c **** 
+ 156:../parte2/main.c **** 	// COMPLETAR: Leer caracteres de la uart0 y copiarlos al buffer
+ 157:../parte2/main.c **** 	// hasta que llenemos el buffer (size) o el carácter leído sea
+ 158:../parte2/main.c **** 	// un retorno de carro '\r'
+ 159:../parte2/main.c **** 	// Los caracteres se leen de uno en uno, utilizando la interfaz
+ 160:../parte2/main.c **** 	// del módulo uart, definida en el fichero uart.h
+ 161:../parte2/main.c **** 
+ 162:../parte2/main.c **** 	//uart_getch()
+ 163:../parte2/main.c **** 	/**/
+ 164:../parte2/main.c **** 
+ 165:../parte2/main.c **** 	return count;
+ 3055              		.loc 1 165 0
+ 3056 01a8 10301BE5 		ldr	r3, [fp, #-16]
+ 3057              	.L18:
+ 166:../parte2/main.c **** }
+ 3058              		.loc 1 166 0
+ 3059 01ac 0300A0E1 		mov	r0, r3
+ 3060 01b0 0CD04BE2 		sub	sp, fp, #12
+ 3061 01b4 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 3062 01b8 1EFF2FE1 		bx	lr
+ 3063              		.cfi_endproc
+ 3064              	.LFE5:
+ 3066              		.align	2
+ 3068              	show_result:
+ 3069              	.LFB6:
+ 167:../parte2/main.c **** 
+ 168:../parte2/main.c **** static int show_result()
+ 169:../parte2/main.c **** {
+ 3070              		.loc 1 169 0
+ 3071              		.cfi_startproc
+ 3072              		@ Function supports interworking.
+ 3073              		@ args = 0, pretend = 0, frame = 16
+ 3074              		@ frame_needed = 1, uses_anonymous_args = 0
+ 3075 01bc 0DC0A0E1 		mov	ip, sp
+ 3076              	.LCFI12:
+ 3077              		.cfi_def_cfa_register 12
+ 3078 01c0 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 3079 01c4 04B04CE2 		sub	fp, ip, #4
+ 3080              		.cfi_offset 14, -8
+ 3081              		.cfi_offset 13, -12
+ 3082              		.cfi_offset 11, -16
+ 3083              	.LCFI13:
+ 3084              		.cfi_def_cfa 11, 4
+ 3085 01c8 10D04DE2 		sub	sp, sp, #16
+ 170:../parte2/main.c **** 	int error = 0;
+ 3086              		.loc 1 170 0
+ 3087 01cc 0030A0E3 		mov	r3, #0
+ 3088 01d0 10300BE5 		str	r3, [fp, #-16]
+ 171:../parte2/main.c **** 	int i = 0;
+ 3089              		.loc 1 171 0
+ 3090 01d4 0030A0E3 		mov	r3, #0
+ 3091 01d8 14300BE5 		str	r3, [fp, #-20]
+ 172:../parte2/main.c **** 	char buffer[2] = {0};
+ 3092              		.loc 1 172 0
+ 3093 01dc 0030A0E3 		mov	r3, #0
+ 3094 01e0 B8314BE1 		strh	r3, [fp, #-24]	@ movhi
+ 173:../parte2/main.c **** 
+ 174:../parte2/main.c **** 	// COMPLETAR: poner error a 1 si las contraseñas son distintas
+ 175:../parte2/main.c **** 
+ 176:../parte2/main.c **** 	// Código de la parte1
+ 177:../parte2/main.c **** 	
+ 178:../parte2/main.c **** 	// COMPLETAR
+ 179:../parte2/main.c **** 	
+ 180:../parte2/main.c **** 	// MODIFICAR el código de la parte1 para que además de mostrar A o E en el
+ 181:../parte2/main.c **** 	// display de 8 segmentos se envíe por el puerto serie uart0 la cadena "\nCorrecto\n"
+ 182:../parte2/main.c **** 	// o "\nError\n" utilizando el interfaz del puerto serie definido en uart.h
+ 183:../parte2/main.c **** 	
+ 184:../parte2/main.c **** 	// COMPLETAR: esperar a que la ISR del timer indique que se ha terminado
+ 185:../parte2/main.c **** 
+ 186:../parte2/main.c **** 	// Código de la parte1
+ 187:../parte2/main.c **** 	
+ 188:../parte2/main.c **** 	// COMPLETAR: Devolver el valor de error para indicar si se ha acertado o no
+ 189:../parte2/main.c **** 	
+ 190:../parte2/main.c **** 	// Código de la parte1
+ 191:../parte2/main.c **** }
+ 3095              		.loc 1 191 0
+ 3096 01e4 0300A0E1 		mov	r0, r3
+ 3097 01e8 0CD04BE2 		sub	sp, fp, #12
+ 3098 01ec 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 3099 01f0 1EFF2FE1 		bx	lr
+ 3100              		.cfi_endproc
+ 3101              	.LFE6:
+ 3103              		.align	2
+ 3104              		.global	setup
+ 3106              	setup:
+ 3107              	.LFB7:
+ 192:../parte2/main.c **** 
+ 193:../parte2/main.c **** int setup(void)
+ 194:../parte2/main.c **** {
+ 3108              		.loc 1 194 0
+ 3109              		.cfi_startproc
+ 3110              		@ Function supports interworking.
+ 3111              		@ args = 0, pretend = 0, frame = 0
+ 3112              		@ frame_needed = 1, uses_anonymous_args = 0
+ 3113 01f4 0DC0A0E1 		mov	ip, sp
+ 3114              	.LCFI14:
+ 3115              		.cfi_def_cfa_register 12
+ 3116 01f8 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 3117 01fc 04B04CE2 		sub	fp, ip, #4
+ 3118              		.cfi_offset 14, -8
+ 3119              		.cfi_offset 13, -12
+ 3120              		.cfi_offset 11, -16
+ 3121              	.LCFI15:
+ 3122              		.cfi_def_cfa 11, 4
+ 195:../parte2/main.c **** 
+ 196:../parte2/main.c **** 	D8Led_init();
+ 3123              		.loc 1 196 0
+ 3124 0200 FEFFFFEB 		bl	D8Led_init
+ 197:../parte2/main.c **** 
+ 198:../parte2/main.c **** 	/* COMPLETAR: Configuración del timer0 para interrumpir cada segundo */
+ 199:../parte2/main.c **** 
+ 200:../parte2/main.c **** 	// Código de la parte1
+ 201:../parte2/main.c **** 
+ 202:../parte2/main.c **** 	/********************************************************************/
+ 203:../parte2/main.c **** 
+ 204:../parte2/main.c **** 	// COMPLETAR: Registramos las ISRs
+ 205:../parte2/main.c **** 
+ 206:../parte2/main.c **** 	// Código de la parte1
+ 207:../parte2/main.c **** 
+ 208:../parte2/main.c **** 	/* Configuración del controlador de interrupciones*/
+ 209:../parte2/main.c **** 	ic_init();
+ 3125              		.loc 1 209 0
+ 3126 0204 FEFFFFEB 		bl	ic_init
+ 210:../parte2/main.c **** 
+ 211:../parte2/main.c **** 	// Código de la parte1
+ 212:../parte2/main.c **** 
+ 213:../parte2/main.c **** 	/***************************************************/
+ 214:../parte2/main.c **** 
+ 215:../parte2/main.c **** 	/***************************************************/
+ 216:../parte2/main.c **** 	//COMPLETAR: Configuración de la uart0
+ 217:../parte2/main.c **** 	
+ 218:../parte2/main.c **** 		/* Hay que:
+ 219:../parte2/main.c **** 		 * 1. inicializar el módulo
+ 220:../parte2/main.c **** 		 * 2. Configurar el modo linea de la uart0 usando la variable global uconf
+ 221:../parte2/main.c **** 		 * 3. Configurar el modo de recepción (POLL o INT) de la uart0
+ 222:../parte2/main.c **** 		 * 4. Configurar el modo de transmisión (POLL o INT) de la uart0
+ 223:../parte2/main.c **** 		 */
+ 224:../parte2/main.c **** 
+ 225:../parte2/main.c **** 	/***************************************************/
+ 226:../parte2/main.c **** 
+ 227:../parte2/main.c **** 	Delay(0);
+ 3127              		.loc 1 227 0
+ 3128 0208 0000A0E3 		mov	r0, #0
+ 3129 020c FEFFFFEB 		bl	Delay
+ 228:../parte2/main.c **** 
+ 229:../parte2/main.c **** 	/* Inicio del juego */
+ 230:../parte2/main.c **** 	gstate = INIT;
+ 3130              		.loc 1 230 0
+ 3131 0210 20309FE5 		ldr	r3, .L21
+ 3132 0214 0020A0E3 		mov	r2, #0
+ 3133 0218 0020C3E5 		strb	r2, [r3, #0]
+ 231:../parte2/main.c **** 	D8Led_digit(12);
+ 3134              		.loc 1 231 0
+ 3135 021c 0C00A0E3 		mov	r0, #12
+ 3136 0220 FEFFFFEB 		bl	D8Led_digit
+ 232:../parte2/main.c **** 
+ 233:../parte2/main.c **** 	return 0;
+ 3137              		.loc 1 233 0
+ 3138 0224 0030A0E3 		mov	r3, #0
+ 234:../parte2/main.c **** }
+ 3139              		.loc 1 234 0
+ 3140 0228 0300A0E1 		mov	r0, r3
+ 3141 022c 0CD04BE2 		sub	sp, fp, #12
+ 3142 0230 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 3143 0234 1EFF2FE1 		bx	lr
+ 3144              	.L22:
+ 3145              		.align	2
+ 3146              	.L21:
+ 3147 0238 00000000 		.word	gstate
+ 3148              		.cfi_endproc
+ 3149              	.LFE7:
+ 3151              		.align	2
+ 3153              	ascii2digit:
+ 3154              	.LFB8:
+ 235:../parte2/main.c **** 
+ 236:../parte2/main.c **** static char ascii2digit(char c)
+ 237:../parte2/main.c **** {
+ 3155              		.loc 1 237 0
+ 3156              		.cfi_startproc
+ 3157              		@ Function supports interworking.
+ 3158              		@ args = 0, pretend = 0, frame = 16
+ 3159              		@ frame_needed = 1, uses_anonymous_args = 0
+ 3160 023c 0DC0A0E1 		mov	ip, sp
+ 3161              	.LCFI16:
+ 3162              		.cfi_def_cfa_register 12
+ 3163 0240 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 3164 0244 04B04CE2 		sub	fp, ip, #4
+ 3165              		.cfi_offset 14, -8
+ 3166              		.cfi_offset 13, -12
+ 3167              		.cfi_offset 11, -16
+ 3168              	.LCFI17:
+ 3169              		.cfi_def_cfa 11, 4
+ 3170 0248 10D04DE2 		sub	sp, sp, #16
+ 3171 024c 0030A0E1 		mov	r3, r0
+ 3172 0250 15304BE5 		strb	r3, [fp, #-21]
+ 238:../parte2/main.c **** 	char d = -1;
+ 3173              		.loc 1 238 0
+ 3174 0254 0030E0E3 		mvn	r3, #0
+ 3175 0258 0D304BE5 		strb	r3, [fp, #-13]
+ 239:../parte2/main.c **** 
+ 240:../parte2/main.c **** 	if ((c >= '0') && (c <= '9'))
+ 3176              		.loc 1 240 0
+ 3177 025c 15305BE5 		ldrb	r3, [fp, #-21]	@ zero_extendqisi2
+ 3178 0260 2F0053E3 		cmp	r3, #47
+ 3179 0264 0600009A 		bls	.L24
+ 3180              		.loc 1 240 0 is_stmt 0 discriminator 1
+ 3181 0268 15305BE5 		ldrb	r3, [fp, #-21]	@ zero_extendqisi2
+ 3182 026c 390053E3 		cmp	r3, #57
+ 3183 0270 0300008A 		bhi	.L24
+ 241:../parte2/main.c **** 		d = c - '0';
+ 3184              		.loc 1 241 0 is_stmt 1
+ 3185 0274 15305BE5 		ldrb	r3, [fp, #-21]
+ 3186 0278 303043E2 		sub	r3, r3, #48
+ 3187 027c 0D304BE5 		strb	r3, [fp, #-13]
+ 3188 0280 120000EA 		b	.L25
+ 3189              	.L24:
+ 242:../parte2/main.c **** 	else if ((c >= 'a') && (c <= 'f'))
+ 3190              		.loc 1 242 0
+ 3191 0284 15305BE5 		ldrb	r3, [fp, #-21]	@ zero_extendqisi2
+ 3192 0288 600053E3 		cmp	r3, #96
+ 3193 028c 0600009A 		bls	.L26
+ 3194              		.loc 1 242 0 is_stmt 0 discriminator 1
+ 3195 0290 15305BE5 		ldrb	r3, [fp, #-21]	@ zero_extendqisi2
+ 3196 0294 660053E3 		cmp	r3, #102
+ 3197 0298 0300008A 		bhi	.L26
+ 243:../parte2/main.c **** 		d = c - 'a' + 10;
+ 3198              		.loc 1 243 0 is_stmt 1
+ 3199 029c 15305BE5 		ldrb	r3, [fp, #-21]
+ 3200 02a0 573043E2 		sub	r3, r3, #87
+ 3201 02a4 0D304BE5 		strb	r3, [fp, #-13]
+ 3202 02a8 080000EA 		b	.L25
+ 3203              	.L26:
+ 244:../parte2/main.c **** 	else if ((c >= 'A') && (c <= 'F'))
+ 3204              		.loc 1 244 0
+ 3205 02ac 15305BE5 		ldrb	r3, [fp, #-21]	@ zero_extendqisi2
+ 3206 02b0 400053E3 		cmp	r3, #64
+ 3207 02b4 0500009A 		bls	.L25
+ 3208              		.loc 1 244 0 is_stmt 0 discriminator 1
+ 3209 02b8 15305BE5 		ldrb	r3, [fp, #-21]	@ zero_extendqisi2
+ 3210 02bc 460053E3 		cmp	r3, #70
+ 3211 02c0 0200008A 		bhi	.L25
+ 245:../parte2/main.c **** 		d = c - 'A' + 10;
+ 3212              		.loc 1 245 0 is_stmt 1
+ 3213 02c4 15305BE5 		ldrb	r3, [fp, #-21]
+ 3214 02c8 373043E2 		sub	r3, r3, #55
+ 3215 02cc 0D304BE5 		strb	r3, [fp, #-13]
+ 3216              	.L25:
+ 246:../parte2/main.c **** 
+ 247:../parte2/main.c **** 	return d;
+ 3217              		.loc 1 247 0
+ 3218 02d0 0D305BE5 		ldrb	r3, [fp, #-13]	@ zero_extendqisi2
+ 248:../parte2/main.c **** }
+ 3219              		.loc 1 248 0
+ 3220 02d4 0300A0E1 		mov	r0, r3
+ 3221 02d8 0CD04BE2 		sub	sp, fp, #12
+ 3222 02dc 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 3223 02e0 1EFF2FE1 		bx	lr
+ 3224              		.cfi_endproc
+ 3225              	.LFE8:
+ 3227              		.align	2
+ 3228              		.global	loop
+ 3230              	loop:
+ 3231              	.LFB9:
+ 249:../parte2/main.c **** 
+ 250:../parte2/main.c **** 
+ 251:../parte2/main.c **** int loop(void)
+ 252:../parte2/main.c **** {
+ 3232              		.loc 1 252 0
+ 3233              		.cfi_startproc
+ 3234              		@ Function supports interworking.
+ 3235              		@ args = 0, pretend = 0, frame = 0
+ 3236              		@ frame_needed = 1, uses_anonymous_args = 0
+ 3237 02e4 0DC0A0E1 		mov	ip, sp
+ 3238              	.LCFI18:
+ 3239              		.cfi_def_cfa_register 12
+ 3240 02e8 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 3241 02ec 04B04CE2 		sub	fp, ip, #4
+ 3242              		.cfi_offset 14, -8
+ 3243              		.cfi_offset 13, -12
+ 3244              		.cfi_offset 11, -16
+ 3245              	.LCFI19:
+ 3246              		.cfi_def_cfa 11, 4
+ 253:../parte2/main.c **** 	int count; //número de teclas pulsadas
+ 254:../parte2/main.c **** 	int error;
+ 255:../parte2/main.c **** 
+ 256:../parte2/main.c **** 	//Máquina de estados
+ 257:../parte2/main.c **** 
+ 258:../parte2/main.c **** 	switch (gstate) {
+ 3247              		.loc 1 258 0
+ 3248 02f0 68309FE5 		ldr	r3, .L36
+ 3249 02f4 0030D3E5 		ldrb	r3, [r3, #0]	@ zero_extendqisi2
+ 3250 02f8 040053E3 		cmp	r3, #4
+ 3251 02fc 03F19F97 		ldrls	pc, [pc, r3, asl #2]
+ 3252 0300 110000EA 		b	.L28
+ 3253              	.L34:
+ 3254 0304 18030000 		.word	.L29
+ 3255 0308 1C030000 		.word	.L30
+ 3256 030c 28030000 		.word	.L31
+ 3257 0310 34030000 		.word	.L32
+ 3258 0314 40030000 		.word	.L33
+ 3259              	.L29:
+ 259:../parte2/main.c **** 		case INIT:
+ 260:../parte2/main.c **** 			do {
+ 261:../parte2/main.c **** 				//COMPLETAR:
+ 262:../parte2/main.c **** 
+ 263:../parte2/main.c **** 				//Codigo de la parte 1
+ 264:../parte2/main.c **** 				
+ 265:../parte2/main.c **** 				/*permanecer en el while mientras se hayan pulsado menos de 4 teclas*/
+ 266:../parte2/main.c **** 			} while (1);
+ 3260              		.loc 1 266 0 discriminator 1
+ 3261 0318 FEFFFFEA 		b	.L29
+ 3262              	.L30:
+ 267:../parte2/main.c **** 
+ 268:../parte2/main.c **** 			//COMPLETAR: Pasar al estado siguiente
+ 269:../parte2/main.c **** 
+ 270:../parte2/main.c **** 		    //Codigo de la parte 1
+ 271:../parte2/main.c **** 
+ 272:../parte2/main.c **** 			break;
+ 273:../parte2/main.c **** 
+ 274:../parte2/main.c **** 		case SPWD:
+ 275:../parte2/main.c **** 
+ 276:../parte2/main.c **** 			// COMPLETAR:
+ 277:../parte2/main.c **** 		    //Codigo de la parte 1
+ 278:../parte2/main.c **** 			
+ 279:../parte2/main.c **** 			Delay(10000);
+ 3263              		.loc 1 279 0
+ 3264 031c 40009FE5 		ldr	r0, .L36+4
+ 3265 0320 FEFFFFEB 		bl	Delay
+ 280:../parte2/main.c **** 			//COMPLETAR
+ 281:../parte2/main.c **** 		    //Codigo de la parte 1
+ 282:../parte2/main.c **** 
+ 283:../parte2/main.c **** 			break;
+ 3266              		.loc 1 283 0
+ 3267 0324 080000EA 		b	.L28
+ 3268              	.L31:
+ 284:../parte2/main.c **** 
+ 285:../parte2/main.c **** 		case DOGUESS:
+ 286:../parte2/main.c **** 			Delay(10000);
+ 3269              		.loc 1 286 0
+ 3270 0328 34009FE5 		ldr	r0, .L36+4
+ 3271 032c FEFFFFEB 		bl	Delay
+ 3272              	.L35:
+ 287:../parte2/main.c **** 			do {
+ 288:../parte2/main.c **** 				//COMPLETAR:
+ 289:../parte2/main.c **** 				/* 
+ 290:../parte2/main.c **** 				 * 1. Mandar por el puerto serie uart0 la cadena "Introduzca passwd: "
+ 291:../parte2/main.c **** 				 *    usando el interfaz definido en uart.h
+ 292:../parte2/main.c **** 				 *
+ 293:../parte2/main.c **** 				 * 2. Mostrar una F en el display
+ 294:../parte2/main.c **** 				 *
+ 295:../parte2/main.c **** 				 * 3. Llamar a la rutina readline para leer una línea del puerto
+ 296:../parte2/main.c **** 				 *    serie en el buffer readlineBuf, almacenando en count el
+ 297:../parte2/main.c **** 				 *    valor devuelto (número de caracteres leídos)
+ 298:../parte2/main.c **** 				 *
+ 299:../parte2/main.c **** 				 * 4. Si el último caracter leído es un '\r' decrementamos count
+ 300:../parte2/main.c **** 				 *    para no tenerlo en cuenta
+ 301:../parte2/main.c **** 				 *
+ 302:../parte2/main.c **** 				 * 5. Si count es menor de 4 la clave no es válida, mostramos
+ 303:../parte2/main.c **** 				 *    una E (digito 14) en el display de 8 segmentos y esperamos
+ 304:../parte2/main.c **** 				 *    1 segundo con Delay.
+ 305:../parte2/main.c **** 				 */
+ 306:../parte2/main.c **** 				/* Mientras leamos menos de 4 caracteres*/
+ 307:../parte2/main.c **** 			} while (1);
+ 3273              		.loc 1 307 0 discriminator 1
+ 3274 0330 FEFFFFEA 		b	.L35
+ 3275              	.L32:
+ 308:../parte2/main.c **** 
+ 309:../parte2/main.c **** 			/* COMPLETAR: debemos copiar los 4 últimos caracteres de readline en
+ 310:../parte2/main.c **** 			 * el buffer guess, haciendo la conversión de ascii-hexadecimal a valor 
+ 311:../parte2/main.c **** 			 * decimal. Para ello podemos utilizar la función ascii2digit
+ 312:../parte2/main.c **** 			 * definida más arriba.
+ 313:../parte2/main.c **** 			 */
+ 314:../parte2/main.c **** 
+ 315:../parte2/main.c **** 			//COMPLETAR: Pasar al estado siguiente
+ 316:../parte2/main.c **** 			//Código de la parte1
+ 317:../parte2/main.c **** 
+ 318:../parte2/main.c **** 			break;
+ 319:../parte2/main.c **** 
+ 320:../parte2/main.c **** 		case SGUESS:
+ 321:../parte2/main.c **** 			//COMPLETAR:
+ 322:../parte2/main.c **** 			//Código de la parte1
+ 323:../parte2/main.c **** 			
+ 324:../parte2/main.c **** 			Delay(10000);
+ 3276              		.loc 1 324 0
+ 3277 0334 28009FE5 		ldr	r0, .L36+4
+ 3278 0338 FEFFFFEB 		bl	Delay
+ 325:../parte2/main.c **** 			//COMPLETAR: Pasar al estado siguiente
+ 326:../parte2/main.c **** 			//Código de la parte1
+ 327:../parte2/main.c **** 			break;
+ 3279              		.loc 1 327 0
+ 3280 033c 020000EA 		b	.L28
+ 3281              	.L33:
+ 328:../parte2/main.c **** 
+ 329:../parte2/main.c **** 		case GOVER:
+ 330:../parte2/main.c **** 			//COMPLETAR:
+ 331:../parte2/main.c **** 			//Código de la parte1
+ 332:../parte2/main.c **** 			Delay(10000);
+ 3282              		.loc 1 332 0
+ 3283 0340 1C009FE5 		ldr	r0, .L36+4
+ 3284 0344 FEFFFFEB 		bl	Delay
+ 333:../parte2/main.c **** 			//COMPLETAR:
+ 334:../parte2/main.c **** 			//Código de la parte1
+ 335:../parte2/main.c **** 
+ 336:../parte2/main.c **** 			break;
+ 3285              		.loc 1 336 0
+ 3286 0348 0000A0E1 		mov	r0, r0	@ nop
+ 3287              	.L28:
+ 337:../parte2/main.c **** 	}
+ 338:../parte2/main.c **** 	return 0;
+ 3288              		.loc 1 338 0
+ 3289 034c 0030A0E3 		mov	r3, #0
+ 339:../parte2/main.c **** }
+ 3290              		.loc 1 339 0
+ 3291 0350 0300A0E1 		mov	r0, r3
+ 3292 0354 0CD04BE2 		sub	sp, fp, #12
+ 3293 0358 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 3294 035c 1EFF2FE1 		bx	lr
+ 3295              	.L37:
+ 3296              		.align	2
+ 3297              	.L36:
+ 3298 0360 00000000 		.word	gstate
+ 3299 0364 10270000 		.word	10000
+ 3300              		.cfi_endproc
+ 3301              	.LFE9:
+ 3303              		.align	2
+ 3304              		.global	main
+ 3306              	main:
+ 3307              	.LFB10:
+ 340:../parte2/main.c **** 
+ 341:../parte2/main.c **** int main(void)
+ 342:../parte2/main.c **** {
+ 3308              		.loc 1 342 0
+ 3309              		.cfi_startproc
+ 3310              		@ Function supports interworking.
+ 3311              		@ args = 0, pretend = 0, frame = 0
+ 3312              		@ frame_needed = 1, uses_anonymous_args = 0
+ 3313 0368 0DC0A0E1 		mov	ip, sp
+ 3314              	.LCFI20:
+ 3315              		.cfi_def_cfa_register 12
+ 3316 036c 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 3317 0370 04B04CE2 		sub	fp, ip, #4
+ 3318              		.cfi_offset 14, -8
+ 3319              		.cfi_offset 13, -12
+ 3320              		.cfi_offset 11, -16
+ 3321              	.LCFI21:
+ 3322              		.cfi_def_cfa 11, 4
+ 343:../parte2/main.c **** 	setup();
+ 3323              		.loc 1 343 0
+ 3324 0374 FEFFFFEB 		bl	setup
+ 3325              	.L39:
+ 344:../parte2/main.c **** 
+ 345:../parte2/main.c **** 	while (1) {
+ 346:../parte2/main.c **** 		loop();
+ 3326              		.loc 1 346 0 discriminator 1
+ 3327 0378 FEFFFFEB 		bl	loop
+ 347:../parte2/main.c **** 	}
+ 3328              		.loc 1 347 0 discriminator 1
+ 3329 037c FDFFFFEA 		b	.L39
+ 3330              		.cfi_endproc
+ 3331              	.LFE10:
+ 3333              		.align	2
+ 3334              		.global	lee_char
+ 3336              	lee_char:
+ 3337              	.LFB11:
+ 348:../parte2/main.c **** }
+ 349:../parte2/main.c **** 
+ 350:../parte2/main.c **** 
+ 351:../parte2/main.c **** char lee_char(){
+ 3338              		.loc 1 351 0
+ 3339              		.cfi_startproc
+ 3340              		@ Function supports interworking.
+ 3341              		@ args = 0, pretend = 0, frame = 8
+ 3342              		@ frame_needed = 1, uses_anonymous_args = 0
+ 3343 0380 0DC0A0E1 		mov	ip, sp
+ 3344              	.LCFI22:
+ 3345              		.cfi_def_cfa_register 12
+ 3346 0384 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 3347 0388 04B04CE2 		sub	fp, ip, #4
+ 3348              		.cfi_offset 14, -8
+ 3349              		.cfi_offset 13, -12
+ 3350              		.cfi_offset 11, -16
+ 3351              	.LCFI23:
+ 3352              		.cfi_def_cfa 11, 4
+ 3353 038c 08D04DE2 		sub	sp, sp, #8
+ 352:../parte2/main.c **** 	char c;
+ 353:../parte2/main.c **** 	while((rUTRSTAT0 & 0x01) == 0) ;
+ 3354              		.loc 1 353 0
+ 3355 0390 0000A0E1 		mov	r0, r0	@ nop
+ 3356              	.L41:
+ 3357              		.loc 1 353 0 is_stmt 0 discriminator 1
+ 3358 0394 2C309FE5 		ldr	r3, .L42
+ 3359 0398 003093E5 		ldr	r3, [r3, #0]
+ 3360 039c 013003E2 		and	r3, r3, #1
+ 3361 03a0 000053E3 		cmp	r3, #0
+ 3362 03a4 FAFFFF0A 		beq	.L41
+ 354:../parte2/main.c **** 	c = RdURXH0();
+ 3363              		.loc 1 354 0 is_stmt 1
+ 3364 03a8 1C309FE5 		ldr	r3, .L42+4
+ 3365 03ac 0030D3E5 		ldrb	r3, [r3, #0]
+ 3366 03b0 0D304BE5 		strb	r3, [fp, #-13]
+ 355:../parte2/main.c **** 	return c;
+ 3367              		.loc 1 355 0
+ 3368 03b4 0D305BE5 		ldrb	r3, [fp, #-13]	@ zero_extendqisi2
+ 356:../parte2/main.c **** 	/*recibimos '1' '2' '3' '4' '\r' '\n'
+ 357:../parte2/main.c **** 	 * vamos a tener que completar readline()*/
+ 358:../parte2/main.c **** }
+ 3369              		.loc 1 358 0
+ 3370 03b8 0300A0E1 		mov	r0, r3
+ 3371 03bc 0CD04BE2 		sub	sp, fp, #12
+ 3372 03c0 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 3373 03c4 1EFF2FE1 		bx	lr
+ 3374              	.L43:
+ 3375              		.align	2
+ 3376              	.L42:
+ 3377 03c8 1000D001 		.word	30408720
+ 3378 03cc 2400D001 		.word	30408740
+ 3379              		.cfi_endproc
+ 3380              	.LFE11:
+ 3382              		.bss
+ 3383              		.align	2
+ 3384              	pos.5051:
+ 3385 0018 00000000 		.space	4
+ 3386              		.text
+ 3387              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 main.c
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2763   .bss:00000000 $d
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2764   .bss:00000000 keyBuffer
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2767   .bss:00000004 keyCount
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2770   .bss:00000008 tmrBuffer
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2773   .bss:0000000c tmrBuffSize
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2776   .bss:00000010 passwd
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2779   .bss:00000014 guess
+                            *COM*:00000080 readlineBuf
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2787   .data:00000000 uconf
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2784   .data:00000000 $d
+                            *COM*:00000001 gstate
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2797   .text:00000000 $a
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2799   .text:00000000 push_buffer
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2859   .text:00000080 timer_ISR
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2886   .text:00000098 printD8Led
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2921   .text:000000d4 $d
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2926   .text:000000dc $a
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2929   .text:000000dc keyboard_ISR
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2974   .text:0000012c $d
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2978   .text:00000130 $a
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:2981   .text:00000130 read_kbd
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3016   .text:0000016c $d
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3021   .text:00000174 $a
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3024   .text:00000174 readline
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3068   .text:000001bc show_result
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3106   .text:000001f4 setup
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3147   .text:00000238 $d
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3151   .text:0000023c $a
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3153   .text:0000023c ascii2digit
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3230   .text:000002e4 loop
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3254   .text:00000304 $d
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3261   .text:00000318 $a
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3298   .text:00000360 $d
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3303   .text:00000368 $a
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3306   .text:00000368 main
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3336   .text:00000380 lee_char
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3377   .text:000003c8 $d
+C:\Users\daniel\AppData\Local\Temp\ccC4AvQ0.s:3384   .bss:00000018 pos.5051
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+Delay
+D8Led_init
+ic_init
+D8Led_digit
