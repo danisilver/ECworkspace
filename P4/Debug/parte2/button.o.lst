@@ -1,0 +1,116 @@
+   1              		.cpu arm7tdmi
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 6
+  10              		.eabi_attribute 18, 4
+  11              		.file	"button.c"
+  21              	.Ltext0:
+  22              		.file 1 "../parte2/button.c"
+ 1731              		.align	2
+ 1732              		.global	read_button
+ 1734              	read_button:
+ 1735              	.LFB0:
+   1:../parte2/button.c **** /*-------------------------------------------------------------------
+   2:../parte2/button.c **** **
+   3:../parte2/button.c **** **  Fichero:
+   4:../parte2/button.c **** **    button.c  10/6/2014
+   5:../parte2/button.c **** **
+   6:../parte2/button.c **** **    Estructura de Computadores
+   7:../parte2/button.c **** **    Dpto. de Arquitectura de Computadores y Autom�tica
+   8:../parte2/button.c **** **    Facultad de Inform�tica. Universidad Complutense de Madrid
+   9:../parte2/button.c **** **
+  10:../parte2/button.c **** **  Prop�sito:
+  11:../parte2/button.c **** **    Contiene las implementaciones de las funciones
+  12:../parte2/button.c **** **    para la gesti�n de los pulsadores de la placa de prototipado
+  13:../parte2/button.c **** **
+  14:../parte2/button.c **** **  Notas de dise�o:
+  15:../parte2/button.c **** **
+  16:../parte2/button.c **** **-----------------------------------------------------------------*/
+  17:../parte2/button.c **** 
+  18:../parte2/button.c **** #include "44b.h"
+  19:../parte2/button.c **** #include "utils.h"
+  20:../parte2/button.c **** #include "button.h"
+  21:../parte2/button.c **** #include "leds.h"
+  22:../parte2/button.c **** #include "gpio.h"
+  23:../parte2/button.c **** 
+  24:../parte2/button.c **** unsigned int read_button(void)
+  25:../parte2/button.c **** {
+ 1736              		.loc 1 25 0
+ 1737              		.cfi_startproc
+ 1738              		@ Function supports interworking.
+ 1739              		@ args = 0, pretend = 0, frame = 8
+ 1740              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1741 0000 0DC0A0E1 		mov	ip, sp
+ 1742              	.LCFI0:
+ 1743              		.cfi_def_cfa_register 12
+ 1744 0004 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 1745 0008 04B04CE2 		sub	fp, ip, #4
+ 1746              		.cfi_offset 14, -8
+ 1747              		.cfi_offset 13, -12
+ 1748              		.cfi_offset 11, -16
+ 1749              	.LCFI1:
+ 1750              		.cfi_def_cfa 11, 4
+ 1751 000c 08D04DE2 		sub	sp, sp, #8
+  26:../parte2/button.c **** 	unsigned int buttons = 0;
+ 1752              		.loc 1 26 0
+ 1753 0010 0030A0E3 		mov	r3, #0
+ 1754 0014 10300BE5 		str	r3, [fp, #-16]
+  27:../parte2/button.c **** 	enum digital val;
+  28:../parte2/button.c **** 	portG_read(6, &val);
+ 1755              		.loc 1 28 0
+ 1756 0018 11304BE2 		sub	r3, fp, #17
+ 1757 001c 0600A0E3 		mov	r0, #6
+ 1758 0020 0310A0E1 		mov	r1, r3
+ 1759 0024 FEFFFFEB 		bl	portG_read
+  29:../parte2/button.c **** 		if(val == LOW)
+ 1760              		.loc 1 29 0
+ 1761 0028 11305BE5 		ldrb	r3, [fp, #-17]	@ zero_extendqisi2
+ 1762 002c 000053E3 		cmp	r3, #0
+ 1763 0030 0100001A 		bne	.L2
+  30:../parte2/button.c **** 				buttons = 1;
+ 1764              		.loc 1 30 0
+ 1765 0034 0130A0E3 		mov	r3, #1
+ 1766 0038 10300BE5 		str	r3, [fp, #-16]
+ 1767              	.L2:
+  31:../parte2/button.c **** 		portG_read(7, &val);
+ 1768              		.loc 1 31 0
+ 1769 003c 11304BE2 		sub	r3, fp, #17
+ 1770 0040 0700A0E3 		mov	r0, #7
+ 1771 0044 0310A0E1 		mov	r1, r3
+ 1772 0048 FEFFFFEB 		bl	portG_read
+  32:../parte2/button.c **** 		if(val == LOW)
+ 1773              		.loc 1 32 0
+ 1774 004c 11305BE5 		ldrb	r3, [fp, #-17]	@ zero_extendqisi2
+ 1775 0050 000053E3 		cmp	r3, #0
+ 1776 0054 0100001A 		bne	.L3
+  33:../parte2/button.c **** 				buttons = 2;
+ 1777              		.loc 1 33 0
+ 1778 0058 0230A0E3 		mov	r3, #2
+ 1779 005c 10300BE5 		str	r3, [fp, #-16]
+ 1780              	.L3:
+  34:../parte2/button.c **** 
+  35:../parte2/button.c **** 	return buttons;
+ 1781              		.loc 1 35 0
+ 1782 0060 10301BE5 		ldr	r3, [fp, #-16]
+  36:../parte2/button.c **** }
+ 1783              		.loc 1 36 0
+ 1784 0064 0300A0E1 		mov	r0, r3
+ 1785 0068 0CD04BE2 		sub	sp, fp, #12
+ 1786 006c 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 1787 0070 1EFF2FE1 		bx	lr
+ 1788              		.cfi_endproc
+ 1789              	.LFE0:
+ 1791              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 button.c
+C:\Users\daniel\AppData\Local\Temp\ccniixpg.s:1731   .text:00000000 $a
+C:\Users\daniel\AppData\Local\Temp\ccniixpg.s:1734   .text:00000000 read_button
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+portG_read

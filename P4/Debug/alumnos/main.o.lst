@@ -1,0 +1,848 @@
+   1              		.cpu arm7tdmi
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 6
+  10              		.eabi_attribute 18, 4
+  11              		.file	"main.c"
+  21              	.Ltext0:
+  22              		.file 1 "../alumnos/main.c"
+ 1763              		.align	2
+ 1766              	RL:
+ 1767 0000 00000000 		.word	0
+ 1768 0004 05000000 		.word	5
+ 1769 0008 00000000 		.word	0
+ 1770 000c 00000000 		.word	0
+ 1771              		.text
+ 1772              		.align	2
+ 1773              		.global	timer_ISR
+ 1775              	timer_ISR:
+ 1776              	.LFB0:
+   1:../alumnos/main.c **** //#include <stdio.h>
+   2:../alumnos/main.c **** #include "44b.h"
+   3:../alumnos/main.c **** #include "button.h"
+   4:../alumnos/main.c **** #include "leds.h"
+   5:../alumnos/main.c **** #include "utils.h"
+   6:../alumnos/main.c **** #include "D8Led.h"
+   7:../alumnos/main.c **** #include "intcontroller.h"
+   8:../alumnos/main.c **** #include "timer.h"
+   9:../alumnos/main.c **** #include "gpio.h"
+  10:../alumnos/main.c **** #include "keyboard.h"
+  11:../alumnos/main.c **** 
+  12:../alumnos/main.c **** struct RLstat {
+  13:../alumnos/main.c **** 	int moving;
+  14:../alumnos/main.c **** 	int speed;
+  15:../alumnos/main.c **** 	int direction;
+  16:../alumnos/main.c **** 	int position;
+  17:../alumnos/main.c **** };
+  18:../alumnos/main.c **** 
+  19:../alumnos/main.c **** static struct RLstat RL = {
+  20:../alumnos/main.c **** 	.moving = 0,
+  21:../alumnos/main.c **** 	.speed = 5,
+  22:../alumnos/main.c **** 	.direction = 0,
+  23:../alumnos/main.c **** 	.position = 0,
+  24:../alumnos/main.c **** };
+  25:../alumnos/main.c **** 
+  26:../alumnos/main.c **** void timer_ISR(void) __attribute__ ((interrupt ("IRQ")));
+  27:../alumnos/main.c **** void button_ISR(void) __attribute__ ((interrupt ("IRQ")));
+  28:../alumnos/main.c **** void keyboard_ISR(void) __attribute__ ((interrupt ("IRQ")));
+  29:../alumnos/main.c **** 
+  30:../alumnos/main.c **** void timer_ISR(void)
+  31:../alumnos/main.c **** {
+ 1777              		.loc 1 31 0
+ 1778              		.cfi_startproc
+ 1779              		@ Interrupt Service Routine.
+ 1780              		@ args = 0, pretend = 0, frame = 0
+ 1781              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1782 0000 04C02DE5 		str	ip, [sp, #-4]!
+ 1783 0004 0DC0A0E1 		mov	ip, sp
+ 1784              	.LCFI0:
+ 1785              		.cfi_def_cfa_register 12
+ 1786 0008 0FD82DE9 		stmfd	sp!, {r0, r1, r2, r3, fp, ip, lr, pc}
+ 1787 000c 04B04CE2 		sub	fp, ip, #4
+ 1788              		.cfi_offset 14, -8
+ 1789              		.cfi_offset 13, -12
+ 1790              		.cfi_offset 11, -16
+ 1791              		.cfi_offset 3, -20
+ 1792              		.cfi_offset 2, -24
+ 1793              		.cfi_offset 1, -28
+ 1794              		.cfi_offset 0, -32
+ 1795              	.LCFI1:
+ 1796              		.cfi_def_cfa 11, 4
+  32:../alumnos/main.c **** 	//REVISAR: tomar el código de avance de posición del led rotante de la práctica anterior
+  33:../alumnos/main.c **** 	if (RL.moving) {
+ 1797              		.loc 1 33 0
+ 1798 0010 AC309FE5 		ldr	r3, .L5
+ 1799 0014 003093E5 		ldr	r3, [r3, #0]
+ 1800 0018 000053E3 		cmp	r3, #0
+ 1801 001c 2000000A 		beq	.L2
+  34:../alumnos/main.c **** 		if (RL.direction) {
+ 1802              		.loc 1 34 0
+ 1803 0020 9C309FE5 		ldr	r3, .L5
+ 1804 0024 083093E5 		ldr	r3, [r3, #8]
+ 1805 0028 000053E3 		cmp	r3, #0
+ 1806 002c 0C00000A 		beq	.L3
+  35:../alumnos/main.c **** 			RL.position++;
+ 1807              		.loc 1 35 0
+ 1808 0030 8C309FE5 		ldr	r3, .L5
+ 1809 0034 0C3093E5 		ldr	r3, [r3, #12]
+ 1810 0038 012083E2 		add	r2, r3, #1
+ 1811 003c 80309FE5 		ldr	r3, .L5
+ 1812 0040 0C2083E5 		str	r2, [r3, #12]
+  36:../alumnos/main.c **** 			if (RL.position > 5)
+ 1813              		.loc 1 36 0
+ 1814 0044 78309FE5 		ldr	r3, .L5
+ 1815 0048 0C3093E5 		ldr	r3, [r3, #12]
+ 1816 004c 050053E3 		cmp	r3, #5
+ 1817 0050 0F0000DA 		ble	.L4
+  37:../alumnos/main.c **** 				RL.position = 0;
+ 1818              		.loc 1 37 0
+ 1819 0054 68309FE5 		ldr	r3, .L5
+ 1820 0058 0020A0E3 		mov	r2, #0
+ 1821 005c 0C2083E5 		str	r2, [r3, #12]
+ 1822 0060 0B0000EA 		b	.L4
+ 1823              	.L3:
+  38:../alumnos/main.c **** 		} else {
+  39:../alumnos/main.c **** 			RL.position--;
+ 1824              		.loc 1 39 0
+ 1825 0064 58309FE5 		ldr	r3, .L5
+ 1826 0068 0C3093E5 		ldr	r3, [r3, #12]
+ 1827 006c 012043E2 		sub	r2, r3, #1
+ 1828 0070 4C309FE5 		ldr	r3, .L5
+ 1829 0074 0C2083E5 		str	r2, [r3, #12]
+  40:../alumnos/main.c **** 			if (RL.position < 0)
+ 1830              		.loc 1 40 0
+ 1831 0078 44309FE5 		ldr	r3, .L5
+ 1832 007c 0C3093E5 		ldr	r3, [r3, #12]
+ 1833 0080 000053E3 		cmp	r3, #0
+ 1834 0084 020000AA 		bge	.L4
+  41:../alumnos/main.c **** 				RL.position = 5;
+ 1835              		.loc 1 41 0
+ 1836 0088 34309FE5 		ldr	r3, .L5
+ 1837 008c 0520A0E3 		mov	r2, #5
+ 1838 0090 0C2083E5 		str	r2, [r3, #12]
+ 1839              	.L4:
+  42:../alumnos/main.c **** 		}
+  43:../alumnos/main.c **** 		D8Led_segment(RL.position);
+ 1840              		.loc 1 43 0
+ 1841 0094 28309FE5 		ldr	r3, .L5
+ 1842 0098 0C3093E5 		ldr	r3, [r3, #12]
+ 1843 009c 0300A0E1 		mov	r0, r3
+ 1844 00a0 FEFFFFEB 		bl	D8Led_segment
+ 1845              	.L2:
+  44:../alumnos/main.c **** 
+  45:../alumnos/main.c **** 	}
+  46:../alumnos/main.c **** 	D8Led_segment(RL.position);
+ 1846              		.loc 1 46 0
+ 1847 00a4 18309FE5 		ldr	r3, .L5
+ 1848 00a8 0C3093E5 		ldr	r3, [r3, #12]
+ 1849 00ac 0300A0E1 		mov	r0, r3
+ 1850 00b0 FEFFFFEB 		bl	D8Led_segment
+  47:../alumnos/main.c **** }
+ 1851              		.loc 1 47 0
+ 1852 00b4 1CD04BE2 		sub	sp, fp, #28
+ 1853 00b8 0F689DE8 		ldmfd	sp, {r0, r1, r2, r3, fp, sp, lr}
+ 1854 00bc 04C09DE4 		ldmfd	sp!, {ip}
+ 1855 00c0 04F05EE2 		subs	pc, lr, #4
+ 1856              	.L6:
+ 1857              		.align	2
+ 1858              	.L5:
+ 1859 00c4 00000000 		.word	RL
+ 1860              		.cfi_endproc
+ 1861              	.LFE0:
+ 1863              		.align	2
+ 1864              		.global	button_ISR
+ 1866              	button_ISR:
+ 1867              	.LFB1:
+  48:../alumnos/main.c **** 
+  49:../alumnos/main.c **** void button_ISR(void)
+  50:../alumnos/main.c **** {
+ 1868              		.loc 1 50 0
+ 1869              		.cfi_startproc
+ 1870              		@ Interrupt Service Routine.
+ 1871              		@ args = 0, pretend = 0, frame = 8
+ 1872              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1873 00c8 04C02DE5 		str	ip, [sp, #-4]!
+ 1874 00cc 0DC0A0E1 		mov	ip, sp
+ 1875              	.LCFI2:
+ 1876              		.cfi_def_cfa_register 12
+ 1877 00d0 0FD82DE9 		stmfd	sp!, {r0, r1, r2, r3, fp, ip, lr, pc}
+ 1878 00d4 04B04CE2 		sub	fp, ip, #4
+ 1879              		.cfi_offset 14, -8
+ 1880              		.cfi_offset 13, -12
+ 1881              		.cfi_offset 11, -16
+ 1882              		.cfi_offset 3, -20
+ 1883              		.cfi_offset 2, -24
+ 1884              		.cfi_offset 1, -28
+ 1885              		.cfi_offset 0, -32
+ 1886              	.LCFI3:
+ 1887              		.cfi_def_cfa 11, 4
+ 1888 00d8 08D04DE2 		sub	sp, sp, #8
+  51:../alumnos/main.c **** 	unsigned int whicheint = rEXTINTPND;
+ 1889              		.loc 1 51 0
+ 1890 00dc D0309FE5 		ldr	r3, .L12
+ 1891 00e0 003093E5 		ldr	r3, [r3, #0]
+ 1892 00e4 20300BE5 		str	r3, [fp, #-32]
+  52:../alumnos/main.c **** 	unsigned int buttons = (whicheint >> 2) & 0x3;
+ 1893              		.loc 1 52 0
+ 1894 00e8 20301BE5 		ldr	r3, [fp, #-32]
+ 1895 00ec 2331A0E1 		mov	r3, r3, lsr #2
+ 1896 00f0 033003E2 		and	r3, r3, #3
+ 1897 00f4 24300BE5 		str	r3, [fp, #-36]
+  53:../alumnos/main.c **** 
+  54:../alumnos/main.c **** 	if (buttons & BUT1) {
+ 1898              		.loc 1 54 0
+ 1899 00f8 24301BE5 		ldr	r3, [fp, #-36]
+ 1900 00fc 013003E2 		and	r3, r3, #1
+ 1901 0100 FF3003E2 		and	r3, r3, #255
+ 1902 0104 000053E3 		cmp	r3, #0
+ 1903 0108 0C00000A 		beq	.L8
+  55:../alumnos/main.c **** 		led1_off();
+ 1904              		.loc 1 55 0
+ 1905 010c FEFFFFEB 		bl	led1_off
+  56:../alumnos/main.c **** 		led2_off();
+ 1906              		.loc 1 56 0
+ 1907 0110 FEFFFFEB 		bl	led2_off
+  57:../alumnos/main.c **** 		if(RL.direction)
+ 1908              		.loc 1 57 0
+ 1909 0114 9C309FE5 		ldr	r3, .L12+4
+ 1910 0118 083093E5 		ldr	r3, [r3, #8]
+ 1911 011c 000053E3 		cmp	r3, #0
+ 1912 0120 0300000A 		beq	.L9
+  58:../alumnos/main.c **** 			RL.direction = 0;
+ 1913              		.loc 1 58 0
+ 1914 0124 8C309FE5 		ldr	r3, .L12+4
+ 1915 0128 0020A0E3 		mov	r2, #0
+ 1916 012c 082083E5 		str	r2, [r3, #8]
+ 1917 0130 020000EA 		b	.L8
+ 1918              	.L9:
+  59:../alumnos/main.c **** 		else
+  60:../alumnos/main.c **** 			RL.direction = 1;
+ 1919              		.loc 1 60 0
+ 1920 0134 7C309FE5 		ldr	r3, .L12+4
+ 1921 0138 0120A0E3 		mov	r2, #1
+ 1922 013c 082083E5 		str	r2, [r3, #8]
+ 1923              	.L8:
+  61:../alumnos/main.c **** 
+  62:../alumnos/main.c **** 		// REVISAR: utilizando la interfaz para los leds definida en leds.h
+  63:../alumnos/main.c **** 		// hay que apagar ambos leds
+  64:../alumnos/main.c **** 		// También hay que comutar la dirección del movimiento del led rotante
+  65:../alumnos/main.c **** 		// representado por el campo direction de la variable RL
+  66:../alumnos/main.c **** 	}
+  67:../alumnos/main.c **** 
+  68:../alumnos/main.c **** 	if (buttons & BUT2) {
+ 1924              		.loc 1 68 0
+ 1925 0140 24301BE5 		ldr	r3, [fp, #-36]
+ 1926 0144 023003E2 		and	r3, r3, #2
+ 1927 0148 000053E3 		cmp	r3, #0
+ 1928 014c 0A00000A 		beq	.L10
+  69:../alumnos/main.c **** 		if(RL.moving){
+ 1929              		.loc 1 69 0
+ 1930 0150 60309FE5 		ldr	r3, .L12+4
+ 1931 0154 003093E5 		ldr	r3, [r3, #0]
+ 1932 0158 000053E3 		cmp	r3, #0
+ 1933 015c 0300000A 		beq	.L11
+  70:../alumnos/main.c **** 			RL.moving = 0;
+ 1934              		.loc 1 70 0
+ 1935 0160 50309FE5 		ldr	r3, .L12+4
+ 1936 0164 0020A0E3 		mov	r2, #0
+ 1937 0168 002083E5 		str	r2, [r3, #0]
+ 1938 016c 020000EA 		b	.L10
+ 1939              	.L11:
+  71:../alumnos/main.c **** 		}
+  72:../alumnos/main.c **** 		else{
+  73:../alumnos/main.c **** 			RL.moving = 1;
+ 1940              		.loc 1 73 0
+ 1941 0170 40309FE5 		ldr	r3, .L12+4
+ 1942 0174 0120A0E3 		mov	r2, #1
+ 1943 0178 002083E5 		str	r2, [r3, #0]
+ 1944              	.L10:
+  74:../alumnos/main.c **** 		}
+  75:../alumnos/main.c **** 	}
+  76:../alumnos/main.c **** 
+  77:../alumnos/main.c **** 	//REVISAR: usar el codigo de la primera parte parte de atencion a los
+  78:../alumnos/main.c **** 	//pulsadores
+  79:../alumnos/main.c **** 
+  80:../alumnos/main.c **** 	// eliminamos rebotes
+  81:../alumnos/main.c **** 	Delay(2000);
+ 1945              		.loc 1 81 0
+ 1946 017c 7D0EA0E3 		mov	r0, #2000
+ 1947 0180 FEFFFFEB 		bl	Delay
+  82:../alumnos/main.c **** 	// borramos el flag en extintpnd
+  83:../alumnos/main.c **** 	rEXTINTPND = rEXTINTPND & ~(buttons << 2);
+ 1948              		.loc 1 83 0
+ 1949 0184 28309FE5 		ldr	r3, .L12
+ 1950 0188 24209FE5 		ldr	r2, .L12
+ 1951 018c 001092E5 		ldr	r1, [r2, #0]
+ 1952 0190 24201BE5 		ldr	r2, [fp, #-36]
+ 1953 0194 0221A0E1 		mov	r2, r2, asl #2
+ 1954 0198 0220E0E1 		mvn	r2, r2
+ 1955 019c 022001E0 		and	r2, r1, r2
+ 1956 01a0 002083E5 		str	r2, [r3, #0]
+  84:../alumnos/main.c **** 	//REVISAR: debemos borrar las peticiones de interrupción en
+  85:../alumnos/main.c **** 	//EXTINTPND escribiendo un 1 en los flags que queremos borrar (los
+  86:../alumnos/main.c **** 	//correspondientes a los pulsadores pulsados)
+  87:../alumnos/main.c **** }
+ 1957              		.loc 1 87 0
+ 1958 01a4 1CD04BE2 		sub	sp, fp, #28
+ 1959 01a8 0F689DE8 		ldmfd	sp, {r0, r1, r2, r3, fp, sp, lr}
+ 1960 01ac 04C09DE4 		ldmfd	sp!, {ip}
+ 1961 01b0 04F05EE2 		subs	pc, lr, #4
+ 1962              	.L13:
+ 1963              		.align	2
+ 1964              	.L12:
+ 1965 01b4 5400D201 		.word	30539860
+ 1966 01b8 00000000 		.word	RL
+ 1967              		.cfi_endproc
+ 1968              	.LFE1:
+ 1970              		.align	2
+ 1971              		.global	keyboard_ISR
+ 1973              	keyboard_ISR:
+ 1974              	.LFB2:
+  88:../alumnos/main.c **** 
+  89:../alumnos/main.c **** 
+  90:../alumnos/main.c **** void keyboard_ISR(void)
+  91:../alumnos/main.c **** {
+ 1975              		.loc 1 91 0
+ 1976              		.cfi_startproc
+ 1977              		@ Interrupt Service Routine.
+ 1978              		@ args = 0, pretend = 0, frame = 8
+ 1979              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1980 01bc 04C02DE5 		str	ip, [sp, #-4]!
+ 1981 01c0 0DC0A0E1 		mov	ip, sp
+ 1982              	.LCFI4:
+ 1983              		.cfi_def_cfa_register 12
+ 1984 01c4 0FD82DE9 		stmfd	sp!, {r0, r1, r2, r3, fp, ip, lr, pc}
+ 1985 01c8 04B04CE2 		sub	fp, ip, #4
+ 1986              		.cfi_offset 14, -8
+ 1987              		.cfi_offset 13, -12
+ 1988              		.cfi_offset 11, -16
+ 1989              		.cfi_offset 3, -20
+ 1990              		.cfi_offset 2, -24
+ 1991              		.cfi_offset 1, -28
+ 1992              		.cfi_offset 0, -32
+ 1993              	.LCFI5:
+ 1994              		.cfi_def_cfa 11, 4
+ 1995 01cc 08D04DE2 		sub	sp, sp, #8
+  92:../alumnos/main.c **** 	int key;
+  93:../alumnos/main.c **** 
+  94:../alumnos/main.c **** 	/* Eliminar rebotes de presión */
+  95:../alumnos/main.c **** 	Delay(200);
+ 1996              		.loc 1 95 0
+ 1997 01d0 C800A0E3 		mov	r0, #200
+ 1998 01d4 FEFFFFEB 		bl	Delay
+  96:../alumnos/main.c **** 	
+  97:../alumnos/main.c **** 	/* Escaneo de tecla */
+  98:../alumnos/main.c **** 	key = kb_scan();
+ 1999              		.loc 1 98 0
+ 2000 01d8 FEFFFFEB 		bl	kb_scan
+ 2001 01dc 20000BE5 		str	r0, [fp, #-32]
+  99:../alumnos/main.c **** 
+ 100:../alumnos/main.c **** 	if (key != -1) {
+ 2002              		.loc 1 100 0
+ 2003 01e0 20301BE5 		ldr	r3, [fp, #-32]
+ 2004 01e4 010073E3 		cmn	r3, #1
+ 2005 01e8 3500000A 		beq	.L15
+ 101:../alumnos/main.c **** 		/* Visualizacion en el display */
+ 102:../alumnos/main.c **** 		D8Led_digit(key);
+ 2006              		.loc 1 102 0
+ 2007 01ec 20001BE5 		ldr	r0, [fp, #-32]
+ 2008 01f0 FEFFFFEB 		bl	D8Led_digit
+ 103:../alumnos/main.c **** 		//REVISAR: mostrar la tecla en el display utilizando el interfaz
+ 104:../alumnos/main.c **** 		//definido en D8Led.h
+ 105:../alumnos/main.c **** 
+ 106:../alumnos/main.c **** 		switch (key) {
+ 2009              		.loc 1 106 0
+ 2010 01f4 20301BE5 		ldr	r3, [fp, #-32]
+ 2011 01f8 030053E3 		cmp	r3, #3
+ 2012 01fc 03F19F97 		ldrls	pc, [pc, r3, asl #2]
+ 2013 0200 230000EA 		b	.L16
+ 2014              	.L21:
+ 2015 0204 14020000 		.word	.L17
+ 2016 0208 34020000 		.word	.L18
+ 2017 020c 54020000 		.word	.L19
+ 2018 0210 74020000 		.word	.L20
+ 2019              	.L17:
+ 107:../alumnos/main.c **** 			case 0:
+ 108:../alumnos/main.c **** 				tmr_set_divider(TIMER0, D1_8);
+ 2020              		.loc 1 108 0
+ 2021 0214 0000A0E3 		mov	r0, #0
+ 2022 0218 0210A0E3 		mov	r1, #2
+ 2023 021c FEFFFFEB 		bl	tmr_set_divider
+ 109:../alumnos/main.c **** 				tmr_set_count(TIMER0, 0, 62500);
+ 2024              		.loc 1 109 0
+ 2025 0220 0000A0E3 		mov	r0, #0
+ 2026 0224 0010A0E3 		mov	r1, #0
+ 2027 0228 C0209FE5 		ldr	r2, .L26
+ 2028 022c FEFFFFEB 		bl	tmr_set_count
+ 110:../alumnos/main.c **** 				//REVISAR: poner en timer0 divisor 1/8 y contador 62500
+ 111:../alumnos/main.c **** 				break;
+ 2029              		.loc 1 111 0
+ 2030 0230 180000EA 		b	.L22
+ 2031              	.L18:
+ 112:../alumnos/main.c **** 			case 1:
+ 113:../alumnos/main.c **** 				tmr_set_divider(TIMER0, D1_8);
+ 2032              		.loc 1 113 0
+ 2033 0234 0000A0E3 		mov	r0, #0
+ 2034 0238 0210A0E3 		mov	r1, #2
+ 2035 023c FEFFFFEB 		bl	tmr_set_divider
+ 114:../alumnos/main.c **** 				tmr_set_count(TIMER0, 0, 31250);
+ 2036              		.loc 1 114 0
+ 2037 0240 0000A0E3 		mov	r0, #0
+ 2038 0244 0010A0E3 		mov	r1, #0
+ 2039 0248 A4209FE5 		ldr	r2, .L26+4
+ 2040 024c FEFFFFEB 		bl	tmr_set_count
+ 115:../alumnos/main.c **** 				//REVISAR: poner en timer0 timer divisor 1/8 y contador 31250
+ 116:../alumnos/main.c **** 				break;
+ 2041              		.loc 1 116 0
+ 2042 0250 100000EA 		b	.L22
+ 2043              	.L19:
+ 117:../alumnos/main.c **** 			case 2:
+ 118:../alumnos/main.c **** 				tmr_set_divider(TIMER0, D1_8);
+ 2044              		.loc 1 118 0
+ 2045 0254 0000A0E3 		mov	r0, #0
+ 2046 0258 0210A0E3 		mov	r1, #2
+ 2047 025c FEFFFFEB 		bl	tmr_set_divider
+ 119:../alumnos/main.c **** 				tmr_set_count(TIMER0, 0, 15625);
+ 2048              		.loc 1 119 0
+ 2049 0260 0000A0E3 		mov	r0, #0
+ 2050 0264 0010A0E3 		mov	r1, #0
+ 2051 0268 88209FE5 		ldr	r2, .L26+8
+ 2052 026c FEFFFFEB 		bl	tmr_set_count
+ 120:../alumnos/main.c **** 				//REVISAR: poner en timer0 timer divisor 1/8 y contador 15625
+ 121:../alumnos/main.c **** 				break;
+ 2053              		.loc 1 121 0
+ 2054 0270 080000EA 		b	.L22
+ 2055              	.L20:
+ 122:../alumnos/main.c **** 			case 3:
+ 123:../alumnos/main.c **** 				tmr_set_divider(TIMER0, D1_4);
+ 2056              		.loc 1 123 0
+ 2057 0274 0000A0E3 		mov	r0, #0
+ 2058 0278 0110A0E3 		mov	r1, #1
+ 2059 027c FEFFFFEB 		bl	tmr_set_divider
+ 124:../alumnos/main.c **** 				tmr_set_count(TIMER0, 0, 62500);
+ 2060              		.loc 1 124 0
+ 2061 0280 0000A0E3 		mov	r0, #0
+ 2062 0284 0010A0E3 		mov	r1, #0
+ 2063 0288 60209FE5 		ldr	r2, .L26
+ 2064 028c FEFFFFEB 		bl	tmr_set_count
+ 125:../alumnos/main.c **** 				//REVISAR: poner en timer0 timer divisor 1/4 y contador 15625
+ 126:../alumnos/main.c **** 				break;
+ 2065              		.loc 1 126 0
+ 2066 0290 000000EA 		b	.L22
+ 2067              	.L16:
+ 127:../alumnos/main.c **** 			default:
+ 128:../alumnos/main.c **** 				break;
+ 2068              		.loc 1 128 0
+ 2069 0294 0000A0E1 		mov	r0, r0	@ nop
+ 2070              	.L22:
+ 129:../alumnos/main.c **** 		}
+ 130:../alumnos/main.c **** 		
+ 131:../alumnos/main.c **** 		/* Esperar a que la tecla se suelte, consultando el registro de datos */		
+ 132:../alumnos/main.c **** 		/*REVISAR: true si está pulsada la tecla (leer del registro rPDATG)*/
+ 133:../alumnos/main.c **** 		while (~rPDATG & 0x1);//eint1
+ 2071              		.loc 1 133 0
+ 2072 0298 0000A0E1 		mov	r0, r0	@ nop
+ 2073              	.L25:
+ 2074              		.loc 1 133 0 is_stmt 0 discriminator 1
+ 2075 029c 58309FE5 		ldr	r3, .L26+12
+ 2076 02a0 003093E5 		ldr	r3, [r3, #0]
+ 2077 02a4 013003E2 		and	r3, r3, #1
+ 2078 02a8 000053E3 		cmp	r3, #0
+ 2079 02ac 0100001A 		bne	.L23
+ 2080 02b0 0130A0E3 		mov	r3, #1
+ 2081 02b4 000000EA 		b	.L24
+ 2082              	.L23:
+ 2083              		.loc 1 133 0 discriminator 2
+ 2084 02b8 0030A0E3 		mov	r3, #0
+ 2085              	.L24:
+ 2086              		.loc 1 133 0 discriminator 3
+ 2087 02bc 000053E3 		cmp	r3, #0
+ 2088 02c0 F5FFFF1A 		bne	.L25
+ 2089              	.L15:
+ 134:../alumnos/main.c **** 	}
+ 135:../alumnos/main.c **** 
+ 136:../alumnos/main.c ****     /* Eliminar rebotes de depresión */
+ 137:../alumnos/main.c ****     Delay(200);
+ 2090              		.loc 1 137 0 is_stmt 1
+ 2091 02c4 C800A0E3 		mov	r0, #200
+ 2092 02c8 FEFFFFEB 		bl	Delay
+ 138:../alumnos/main.c ****      
+ 139:../alumnos/main.c ****     /* Borrar interrupciones pendientes */
+ 140:../alumnos/main.c **** 	//REVISAR
+ 141:../alumnos/main.c **** 	//borrar la interrupción por la línea EINT1 en el registro rI_ISPC
+ 142:../alumnos/main.c ****     rI_ISPC = rI_ISPC & INT_BIT(24);
+ 2093              		.loc 1 142 0
+ 2094 02cc 2C309FE5 		ldr	r3, .L26+16
+ 2095 02d0 28209FE5 		ldr	r2, .L26+16
+ 2096 02d4 002092E5 		ldr	r2, [r2, #0]
+ 2097 02d8 012402E2 		and	r2, r2, #16777216
+ 2098 02dc 002083E5 		str	r2, [r3, #0]
+ 143:../alumnos/main.c **** }
+ 2099              		.loc 1 143 0
+ 2100 02e0 1CD04BE2 		sub	sp, fp, #28
+ 2101 02e4 0F689DE8 		ldmfd	sp, {r0, r1, r2, r3, fp, sp, lr}
+ 2102 02e8 04C09DE4 		ldmfd	sp!, {ip}
+ 2103 02ec 04F05EE2 		subs	pc, lr, #4
+ 2104              	.L27:
+ 2105              		.align	2
+ 2106              	.L26:
+ 2107 02f0 24F40000 		.word	62500
+ 2108 02f4 127A0000 		.word	31250
+ 2109 02f8 093D0000 		.word	15625
+ 2110 02fc 4400D201 		.word	30539844
+ 2111 0300 2400E001 		.word	31457316
+ 2112              		.cfi_endproc
+ 2113              	.LFE2:
+ 2115              		.align	2
+ 2116              		.global	setup
+ 2118              	setup:
+ 2119              	.LFB3:
+ 144:../alumnos/main.c **** 
+ 145:../alumnos/main.c **** int setup(void)
+ 146:../alumnos/main.c **** {
+ 2120              		.loc 1 146 0
+ 2121              		.cfi_startproc
+ 2122              		@ Function supports interworking.
+ 2123              		@ args = 0, pretend = 0, frame = 0
+ 2124              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2125 0304 0DC0A0E1 		mov	ip, sp
+ 2126              	.LCFI6:
+ 2127              		.cfi_def_cfa_register 12
+ 2128 0308 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 2129 030c 04B04CE2 		sub	fp, ip, #4
+ 2130              		.cfi_offset 14, -8
+ 2131              		.cfi_offset 13, -12
+ 2132              		.cfi_offset 11, -16
+ 2133              	.LCFI7:
+ 2134              		.cfi_def_cfa 11, 4
+ 147:../alumnos/main.c **** 	leds_init();
+ 2135              		.loc 1 147 0
+ 2136 0310 FEFFFFEB 		bl	leds_init
+ 148:../alumnos/main.c **** 	D8Led_init();
+ 2137              		.loc 1 148 0
+ 2138 0314 FEFFFFEB 		bl	D8Led_init
+ 149:../alumnos/main.c **** 	D8Led_segment(RL.position);
+ 2139              		.loc 1 149 0
+ 2140 0318 3C319FE5 		ldr	r3, .L30
+ 2141 031c 0C3093E5 		ldr	r3, [r3, #12]
+ 2142 0320 0300A0E1 		mov	r0, r3
+ 2143 0324 FEFFFFEB 		bl	D8Led_segment
+ 150:../alumnos/main.c **** 
+ 151:../alumnos/main.c **** 	/* Port G: configuración para generación de interrupciones externas,
+ 152:../alumnos/main.c **** 	 *         botones y teclado
+ 153:../alumnos/main.c **** 	 **/
+ 154:../alumnos/main.c **** 
+ 155:../alumnos/main.c **** 	portG_conf(1, EINT);
+ 2144              		.loc 1 155 0
+ 2145 0328 0100A0E3 		mov	r0, #1
+ 2146 032c 0310A0E3 		mov	r1, #3
+ 2147 0330 FEFFFFEB 		bl	portG_conf
+ 156:../alumnos/main.c **** 	portG_conf(6, EINT);
+ 2148              		.loc 1 156 0
+ 2149 0334 0600A0E3 		mov	r0, #6
+ 2150 0338 0310A0E3 		mov	r1, #3
+ 2151 033c FEFFFFEB 		bl	portG_conf
+ 157:../alumnos/main.c **** 	portG_conf(7, EINT);
+ 2152              		.loc 1 157 0
+ 2153 0340 0700A0E3 		mov	r0, #7
+ 2154 0344 0310A0E3 		mov	r1, #3
+ 2155 0348 FEFFFFEB 		bl	portG_conf
+ 158:../alumnos/main.c **** 
+ 159:../alumnos/main.c **** 	portG_eint_trig(1, FALLING);//Necesario?
+ 2156              		.loc 1 159 0
+ 2157 034c 0100A0E3 		mov	r0, #1
+ 2158 0350 0210A0E3 		mov	r1, #2
+ 2159 0354 FEFFFFEB 		bl	portG_eint_trig
+ 160:../alumnos/main.c **** 	portG_eint_trig(6, FALLING);
+ 2160              		.loc 1 160 0
+ 2161 0358 0600A0E3 		mov	r0, #6
+ 2162 035c 0210A0E3 		mov	r1, #2
+ 2163 0360 FEFFFFEB 		bl	portG_eint_trig
+ 161:../alumnos/main.c **** 	portG_eint_trig(7, FALLING);
+ 2164              		.loc 1 161 0
+ 2165 0364 0700A0E3 		mov	r0, #7
+ 2166 0368 0210A0E3 		mov	r1, #2
+ 2167 036c FEFFFFEB 		bl	portG_eint_trig
+ 162:../alumnos/main.c **** 
+ 163:../alumnos/main.c **** 	//Necesario resistencia en pin 1?
+ 164:../alumnos/main.c **** 	portG_conf_pup(6, ENABLE);
+ 2168              		.loc 1 164 0
+ 2169 0370 0600A0E3 		mov	r0, #6
+ 2170 0374 0110A0E3 		mov	r1, #1
+ 2171 0378 FEFFFFEB 		bl	portG_conf_pup
+ 165:../alumnos/main.c **** 	portG_conf_pup(7, ENABLE);
+ 2172              		.loc 1 165 0
+ 2173 037c 0700A0E3 		mov	r0, #7
+ 2174 0380 0110A0E3 		mov	r1, #1
+ 2175 0384 FEFFFFEB 		bl	portG_conf_pup
+ 166:../alumnos/main.c **** 	//REVISAR: utilizando el interfaz para el puerto G definido en gpio.h
+ 167:../alumnos/main.c **** 	//configurar los pines 1, 6 y 7 del puerto G para poder generar interrupciones
+ 168:../alumnos/main.c **** 	//externas por flanco de bajada por ellos y activar las correspondientes
+ 169:../alumnos/main.c **** 	//resistencias de pull-up.
+ 170:../alumnos/main.c **** 
+ 171:../alumnos/main.c **** 
+ 172:../alumnos/main.c **** 	/********************************************************************/
+ 173:../alumnos/main.c **** 
+ 174:../alumnos/main.c **** 	/* Configuración del timer */
+ 175:../alumnos/main.c **** 
+ 176:../alumnos/main.c **** 
+ 177:../alumnos/main.c **** 	//COMPLETAR: tomar el código de la segunda parte
+ 178:../alumnos/main.c **** 
+ 179:../alumnos/main.c **** 	tmr_set_prescaler(TIMER0, 255);
+ 2176              		.loc 1 179 0
+ 2177 0388 0000A0E3 		mov	r0, #0
+ 2178 038c FF10A0E3 		mov	r1, #255
+ 2179 0390 FEFFFFEB 		bl	tmr_set_prescaler
+ 180:../alumnos/main.c **** 	tmr_set_divider(TIMER0, 8);
+ 2180              		.loc 1 180 0
+ 2181 0394 0000A0E3 		mov	r0, #0
+ 2182 0398 0810A0E3 		mov	r1, #8
+ 2183 039c FEFFFFEB 		bl	tmr_set_divider
+ 181:../alumnos/main.c **** 	tmr_set_count(TIMER0, 62500, 1);
+ 2184              		.loc 1 181 0
+ 2185 03a0 0000A0E3 		mov	r0, #0
+ 2186 03a4 B4109FE5 		ldr	r1, .L30+4
+ 2187 03a8 0120A0E3 		mov	r2, #1
+ 2188 03ac FEFFFFEB 		bl	tmr_set_count
+ 182:../alumnos/main.c **** 
+ 183:../alumnos/main.c **** 
+ 184:../alumnos/main.c **** 	if (RL.moving)
+ 2189              		.loc 1 184 0
+ 2190 03b0 A4309FE5 		ldr	r3, .L30
+ 2191 03b4 003093E5 		ldr	r3, [r3, #0]
+ 2192 03b8 000053E3 		cmp	r3, #0
+ 2193 03bc 0100000A 		beq	.L29
+ 185:../alumnos/main.c **** 		tmr_start(TIMER0);
+ 2194              		.loc 1 185 0
+ 2195 03c0 0000A0E3 		mov	r0, #0
+ 2196 03c4 FEFFFFEB 		bl	tmr_start
+ 2197              	.L29:
+ 186:../alumnos/main.c **** 	/***************************/
+ 187:../alumnos/main.c **** 
+ 188:../alumnos/main.c **** 	// Registramos las ISRs
+ 189:../alumnos/main.c **** 	pISR_TIMER0   = timer_ISR;//REVISAR: registrar la RTI del timer
+ 2198              		.loc 1 189 0
+ 2199 03c8 94309FE5 		ldr	r3, .L30+8
+ 2200 03cc 94209FE5 		ldr	r2, .L30+12
+ 2201 03d0 002083E5 		str	r2, [r3, #0]
+ 190:../alumnos/main.c **** 	pISR_EINT4567 = button_ISR;//REVISAR: registrar la RTI de los botones
+ 2202              		.loc 1 190 0
+ 2203 03d4 90309FE5 		ldr	r3, .L30+16
+ 2204 03d8 90209FE5 		ldr	r2, .L30+20
+ 2205 03dc 002083E5 		str	r2, [r3, #0]
+ 191:../alumnos/main.c **** 	pISR_EINT1    = keyboard_ISR;//REVISAR: registrar la RTI del teclado
+ 2206              		.loc 1 191 0
+ 2207 03e0 8C309FE5 		ldr	r3, .L30+24
+ 2208 03e4 8C209FE5 		ldr	r2, .L30+28
+ 2209 03e8 002083E5 		str	r2, [r3, #0]
+ 192:../alumnos/main.c **** 
+ 193:../alumnos/main.c **** 	/* Configuración del controlador de interrupciones
+ 194:../alumnos/main.c **** 	 * Habilitamos la línea IRQ, en modo vectorizado y registramos una ISR para
+ 195:../alumnos/main.c **** 	 * la línea IRQ
+ 196:../alumnos/main.c **** 	 * Configuramos el timer 0 en modo IRQ y habilitamos esta línea
+ 197:../alumnos/main.c **** 	 * Configuramos la línea EINT4567 en modo IRQ y la habilitamos
+ 198:../alumnos/main.c **** 	 * Configuramos la línea EINT1 en modo IRQ y la habilitamos
+ 199:../alumnos/main.c **** 	 */
+ 200:../alumnos/main.c **** 
+ 201:../alumnos/main.c **** 	ic_init();
+ 2210              		.loc 1 201 0
+ 2211 03ec FEFFFFEB 		bl	ic_init
+ 202:../alumnos/main.c **** 
+ 203:../alumnos/main.c **** 	//REVISAR: utilizando el interfaz definido en intcontroller.h
+ 204:../alumnos/main.c **** 	//		habilitar la línea IRQ en modo vectorizado
+ 205:../alumnos/main.c **** 	//		deshabilitar la línea FIQ
+ 206:../alumnos/main.c **** 	//		configurar la línea INT_TIMER0 en modo IRQ
+ 207:../alumnos/main.c **** 	//		configurar la línea INT_EINT4567 en modo IRQ
+ 208:../alumnos/main.c **** 	//		configurar la línea INT_EINT1 en modo IRQ
+ 209:../alumnos/main.c **** 	//		habilitar la línea INT_TIMER0
+ 210:../alumnos/main.c **** 	//		habilitar la línea INT_EINT4567
+ 211:../alumnos/main.c **** 	//		habilitar la línea INT_EINT1
+ 212:../alumnos/main.c **** 
+ 213:../alumnos/main.c **** 	/***************************************************/
+ 214:../alumnos/main.c **** 
+ 215:../alumnos/main.c **** 	ic_conf_irq(ENABLE, VEC);
+ 2212              		.loc 1 215 0
+ 2213 03f0 0100A0E3 		mov	r0, #1
+ 2214 03f4 0010A0E3 		mov	r1, #0
+ 2215 03f8 FEFFFFEB 		bl	ic_conf_irq
+ 216:../alumnos/main.c **** 	ic_conf_fiq(DISABLE);
+ 2216              		.loc 1 216 0
+ 2217 03fc 0000A0E3 		mov	r0, #0
+ 2218 0400 FEFFFFEB 		bl	ic_conf_fiq
+ 217:../alumnos/main.c **** 
+ 218:../alumnos/main.c **** 	ic_conf_line(INT_TIMER0, IRQ);
+ 2219              		.loc 1 218 0
+ 2220 0404 0D00A0E3 		mov	r0, #13
+ 2221 0408 0010A0E3 		mov	r1, #0
+ 2222 040c FEFFFFEB 		bl	ic_conf_line
+ 219:../alumnos/main.c **** 	ic_conf_line(INT_EINT4567, IRQ);
+ 2223              		.loc 1 219 0
+ 2224 0410 1500A0E3 		mov	r0, #21
+ 2225 0414 0010A0E3 		mov	r1, #0
+ 2226 0418 FEFFFFEB 		bl	ic_conf_line
+ 220:../alumnos/main.c **** 	ic_conf_line(INT_EINT1, IRQ);
+ 2227              		.loc 1 220 0
+ 2228 041c 1800A0E3 		mov	r0, #24
+ 2229 0420 0010A0E3 		mov	r1, #0
+ 2230 0424 FEFFFFEB 		bl	ic_conf_line
+ 221:../alumnos/main.c **** 
+ 222:../alumnos/main.c **** 	ic_enable(INT_TIMER0);
+ 2231              		.loc 1 222 0
+ 2232 0428 0D00A0E3 		mov	r0, #13
+ 2233 042c FEFFFFEB 		bl	ic_enable
+ 223:../alumnos/main.c **** 	ic_enable(INT_EINT4567);
+ 2234              		.loc 1 223 0
+ 2235 0430 1500A0E3 		mov	r0, #21
+ 2236 0434 FEFFFFEB 		bl	ic_enable
+ 224:../alumnos/main.c **** 	ic_enable(INT_EINT1);
+ 2237              		.loc 1 224 0
+ 2238 0438 1800A0E3 		mov	r0, #24
+ 2239 043c FEFFFFEB 		bl	ic_enable
+ 225:../alumnos/main.c **** 
+ 226:../alumnos/main.c **** 
+ 227:../alumnos/main.c **** 	Delay(0);
+ 2240              		.loc 1 227 0
+ 2241 0440 0000A0E3 		mov	r0, #0
+ 2242 0444 FEFFFFEB 		bl	Delay
+ 228:../alumnos/main.c **** 	return 0;
+ 2243              		.loc 1 228 0
+ 2244 0448 0030A0E3 		mov	r3, #0
+ 229:../alumnos/main.c **** }
+ 2245              		.loc 1 229 0
+ 2246 044c 0300A0E1 		mov	r0, r3
+ 2247 0450 0CD04BE2 		sub	sp, fp, #12
+ 2248 0454 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 2249 0458 1EFF2FE1 		bx	lr
+ 2250              	.L31:
+ 2251              		.align	2
+ 2252              	.L30:
+ 2253 045c 00000000 		.word	RL
+ 2254 0460 24F40000 		.word	62500
+ 2255 0464 54FF7F0C 		.word	209715028
+ 2256 0468 00000000 		.word	timer_ISR
+ 2257 046c 74FF7F0C 		.word	209715060
+ 2258 0470 00000000 		.word	button_ISR
+ 2259 0474 80FF7F0C 		.word	209715072
+ 2260 0478 00000000 		.word	keyboard_ISR
+ 2261              		.cfi_endproc
+ 2262              	.LFE3:
+ 2264              		.align	2
+ 2265              		.global	loop
+ 2267              	loop:
+ 2268              	.LFB4:
+ 230:../alumnos/main.c **** 
+ 231:../alumnos/main.c **** int loop(void)
+ 232:../alumnos/main.c **** {
+ 2269              		.loc 1 232 0
+ 2270              		.cfi_startproc
+ 2271              		@ Function supports interworking.
+ 2272              		@ args = 0, pretend = 0, frame = 0
+ 2273              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2274 047c 0DC0A0E1 		mov	ip, sp
+ 2275              	.LCFI8:
+ 2276              		.cfi_def_cfa_register 12
+ 2277 0480 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 2278 0484 04B04CE2 		sub	fp, ip, #4
+ 2279              		.cfi_offset 14, -8
+ 2280              		.cfi_offset 13, -12
+ 2281              		.cfi_offset 11, -16
+ 2282              	.LCFI9:
+ 2283              		.cfi_def_cfa 11, 4
+ 233:../alumnos/main.c **** 	return 0;
+ 2284              		.loc 1 233 0
+ 2285 0488 0030A0E3 		mov	r3, #0
+ 234:../alumnos/main.c **** }
+ 2286              		.loc 1 234 0
+ 2287 048c 0300A0E1 		mov	r0, r3
+ 2288 0490 0CD04BE2 		sub	sp, fp, #12
+ 2289 0494 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 2290 0498 1EFF2FE1 		bx	lr
+ 2291              		.cfi_endproc
+ 2292              	.LFE4:
+ 2294              		.align	2
+ 2295              		.global	main
+ 2297              	main:
+ 2298              	.LFB5:
+ 235:../alumnos/main.c **** 
+ 236:../alumnos/main.c **** 
+ 237:../alumnos/main.c **** int main(void)
+ 238:../alumnos/main.c **** {
+ 2299              		.loc 1 238 0
+ 2300              		.cfi_startproc
+ 2301              		@ Function supports interworking.
+ 2302              		@ args = 0, pretend = 0, frame = 0
+ 2303              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2304 049c 0DC0A0E1 		mov	ip, sp
+ 2305              	.LCFI10:
+ 2306              		.cfi_def_cfa_register 12
+ 2307 04a0 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 2308 04a4 04B04CE2 		sub	fp, ip, #4
+ 2309              		.cfi_offset 14, -8
+ 2310              		.cfi_offset 13, -12
+ 2311              		.cfi_offset 11, -16
+ 2312              	.LCFI11:
+ 2313              		.cfi_def_cfa 11, 4
+ 239:../alumnos/main.c **** 	setup();
+ 2314              		.loc 1 239 0
+ 2315 04a8 FEFFFFEB 		bl	setup
+ 2316              	.L34:
+ 240:../alumnos/main.c **** 
+ 241:../alumnos/main.c **** 	while (1) {
+ 242:../alumnos/main.c **** 		loop();
+ 2317              		.loc 1 242 0 discriminator 1
+ 2318 04ac FEFFFFEB 		bl	loop
+ 243:../alumnos/main.c **** 	}
+ 2319              		.loc 1 243 0 discriminator 1
+ 2320 04b0 FDFFFFEA 		b	.L34
+ 2321              		.cfi_endproc
+ 2322              	.LFE5:
+ 2324              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 main.c
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:1763   .data:00000000 $d
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:1766   .data:00000000 RL
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:1772   .text:00000000 $a
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:1775   .text:00000000 timer_ISR
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:1859   .text:000000c4 $d
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:1863   .text:000000c8 $a
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:1866   .text:000000c8 button_ISR
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:1965   .text:000001b4 $d
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:1970   .text:000001bc $a
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:1973   .text:000001bc keyboard_ISR
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:2015   .text:00000204 $d
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:2021   .text:00000214 $a
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:2107   .text:000002f0 $d
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:2115   .text:00000304 $a
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:2118   .text:00000304 setup
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:2253   .text:0000045c $d
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:2264   .text:0000047c $a
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:2267   .text:0000047c loop
+C:\Users\daniel\AppData\Local\Temp\cc8jl5g2.s:2297   .text:0000049c main
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+D8Led_segment
+led1_off
+led2_off
+Delay
+kb_scan
+D8Led_digit
+tmr_set_divider
+tmr_set_count
+leds_init
+D8Led_init
+portG_conf
+portG_eint_trig
+portG_conf_pup
+tmr_set_prescaler
+tmr_start
+ic_init
+ic_conf_irq
+ic_conf_fiq
+ic_conf_line
+ic_enable

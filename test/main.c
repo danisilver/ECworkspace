@@ -101,6 +101,7 @@ int loop(void)
 			
 		}
 	}
+	D8Led_segment(RL.position);
 
 	Delay(2000); // espera de 200ms para que el bucle se repita 5 veces por segundo
 	return 0;

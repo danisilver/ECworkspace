@@ -1,0 +1,364 @@
+Archive member included because of file (symbol)
+
+c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2\libgcc.a(_divsi3.o)
+                              ./alumnos/utils.o (__aeabi_idiv)
+c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2\libgcc.a(_dvmd_tls.o)
+                              c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2\libgcc.a(_divsi3.o) (__aeabi_idiv0)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD ./alumnos/D8Led.o
+LOAD ./alumnos/button.o
+LOAD ./alumnos/gpio.o
+LOAD ./alumnos/init.o
+LOAD ./alumnos/intcontroller.o
+LOAD ./alumnos/keyboard.o
+LOAD ./alumnos/leds.o
+LOAD ./alumnos/main.o
+LOAD ./alumnos/main2.o
+LOAD ./alumnos/timer.o
+LOAD ./alumnos/utils.o
+START GROUP
+LOAD c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2\libgcc.a
+LOAD c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2/../../../../arm-none-eabi/lib\libc.a
+END GROUP
+                0x0c100000                . = 0xc100000
+
+.data           0x0c100000       0xc8
+ *(.data*)
+ .data          0x0c100000       0x60 ./alumnos/D8Led.o
+ .data          0x0c100060        0x0 ./alumnos/button.o
+ .data          0x0c100060        0x0 ./alumnos/gpio.o
+ .data          0x0c100060        0x0 ./alumnos/init.o
+ .data          0x0c100060        0x0 ./alumnos/intcontroller.o
+ .data          0x0c100060        0x4 ./alumnos/keyboard.o
+ .data          0x0c100064        0x0 ./alumnos/leds.o
+ .data          0x0c100064       0x10 ./alumnos/main.o
+ .data          0x0c100074        0x0 ./alumnos/main2.o
+ .data          0x0c100074        0x0 ./alumnos/timer.o
+ .data          0x0c100074        0x4 ./alumnos/utils.o
+ .data          0x0c100078        0x0 c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2\libgcc.a(_divsi3.o)
+ .data          0x0c100078        0x0 c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2\libgcc.a(_dvmd_tls.o)
+ *(.rodata*)
+ .rodata        0x0c100078       0x50 ./alumnos/keyboard.o
+                0x0c1000c8                Image_ZI_Base = .
+
+.bss            0x0c1000c8        0x4
+ *(.bss*)
+ .bss           0x0c1000c8        0x0 ./alumnos/D8Led.o
+ .bss           0x0c1000c8        0x0 ./alumnos/button.o
+ .bss           0x0c1000c8        0x0 ./alumnos/gpio.o
+ .bss           0x0c1000c8        0x0 ./alumnos/init.o
+ .bss           0x0c1000c8        0x0 ./alumnos/intcontroller.o
+ .bss           0x0c1000c8        0x0 ./alumnos/keyboard.o
+ .bss           0x0c1000c8        0x4 ./alumnos/leds.o
+ .bss           0x0c1000cc        0x0 ./alumnos/main.o
+ .bss           0x0c1000cc        0x0 ./alumnos/main2.o
+ .bss           0x0c1000cc        0x0 ./alumnos/timer.o
+ .bss           0x0c1000cc        0x0 ./alumnos/utils.o
+ .bss           0x0c1000cc        0x0 c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2\libgcc.a(_divsi3.o)
+ .bss           0x0c1000cc        0x0 c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2\libgcc.a(_dvmd_tls.o)
+ *(COMMON)
+                0x0c1000cc                Image_ZI_Limit = .
+
+.text           0x0c1000cc     0x1f14
+ *(.text*)
+ .text          0x0c1000cc       0xd4 ./alumnos/D8Led.o
+                0x0c1000cc                D8Led_init
+                0x0c1000f0                D8Led_segment
+                0x0c10014c                D8Led_digit
+ .text          0x0c1001a0       0x74 ./alumnos/button.o
+                0x0c1001a0                read_button
+ .text          0x0c100214      0x748 ./alumnos/gpio.o
+                0x0c100214                portB_conf
+                0x0c1002dc                portB_write
+                0x0c100398                portG_conf
+                0x0c1004fc                portG_eint_trig
+                0x0c1006d0                portG_write
+                0x0c1007d0                portG_read
+                0x0c100894                portG_conf_pup
+ .text          0x0c10095c      0x100 ./alumnos/init.o
+                0x0c10095c                start
+ .text          0x0c100a5c      0x3e8 ./alumnos/intcontroller.o
+                0x0c100a5c                ic_init
+                0x0c100aa0                ic_conf_irq
+                0x0c100b7c                ic_conf_fiq
+                0x0c100c00                ic_conf_line
+                0x0c100cd0                ic_enable
+                0x0c100d38                ic_disable
+                0x0c100d9c                ic_cleanflag
+ .text          0x0c100e44      0x1a4 ./alumnos/keyboard.o
+                0x0c100e44                kb_scan
+ .text          0x0c100fe8      0x298 ./alumnos/leds.o
+                0x0c100fe8                leds_init
+                0x0c10102c                led1_on
+                0x0c10106c                led1_off
+                0x0c1010ac                led2_on
+                0x0c1010ec                led2_off
+                0x0c10112c                led1_switch
+                0x0c10116c                led2_switch
+                0x0c1011ac                leds_switch
+                0x0c1011ec                leds_display
+ .text          0x0c101280      0x4b4 ./alumnos/main.o
+                0x0c101280                timer_ISR
+                0x0c101348                button_ISR
+                0x0c10143c                keyboard_ISR
+                0x0c101584                setup
+                0x0c1016fc                loop
+                0x0c10171c                main
+ .text          0x0c101734        0x0 ./alumnos/main2.o
+ .text          0x0c101734      0x628 ./alumnos/timer.o
+                0x0c101734                tmr_set_prescaler
+                0x0c1017e0                tmr_set_divider
+                0x0c1018f4                tmr_set_count
+                0x0c101a28                tmr_update
+                0x0c101ad4                tmr_set_mode
+                0x0c101bb8                tmr_start
+                0x0c101c40                tmr_stop
+                0x0c101ccc                tmr_isrunning
+ .text          0x0c101d5c      0x138 ./alumnos/utils.o
+                0x0c101d5c                Delay
+ .text          0x0c101e94      0x148 c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2\libgcc.a(_divsi3.o)
+                0x0c101e94                __divsi3
+                0x0c101e94                __aeabi_idiv
+                0x0c101fbc                __aeabi_idivmod
+ .text          0x0c101fdc        0x4 c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2\libgcc.a(_dvmd_tls.o)
+                0x0c101fdc                __aeabi_idiv0
+                0x0c101fdc                __aeabi_ldiv0
+                0x0c101fe0                PROVIDE (end, .)
+START GROUP
+LOAD c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2\libgcc.a
+LOAD c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2/../../../../arm-none-eabi/lib\libg.a
+LOAD c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2/../../../../arm-none-eabi/lib\libc.a
+LOAD c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2/../../../../arm-none-eabi/lib\libm.a
+LOAD c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2/../../../../arm-none-eabi/lib\libnosys.a
+END GROUP
+OUTPUT(P4.elf elf32-littlearm)
+
+.glue_7         0x0c101fe0        0x0
+ .glue_7        0x00000000        0x0 linker stubs
+
+.glue_7t        0x0c101fe0        0x0
+ .glue_7t       0x00000000        0x0 linker stubs
+
+.vfp11_veneer   0x0c101fe0        0x0
+ .vfp11_veneer  0x00000000        0x0 linker stubs
+
+.v4_bx          0x0c101fe0        0x0
+ .v4_bx         0x00000000        0x0 linker stubs
+
+.debug_abbrev   0x00000000      0x5b5
+ .debug_abbrev  0x00000000       0x88 ./alumnos/D8Led.o
+ .debug_abbrev  0x00000088       0x79 ./alumnos/button.o
+ .debug_abbrev  0x00000101       0xb7 ./alumnos/gpio.o
+ .debug_abbrev  0x000001b8       0x14 ./alumnos/init.o
+ .debug_abbrev  0x000001cc       0xdd ./alumnos/intcontroller.o
+ .debug_abbrev  0x000002a9       0x85 ./alumnos/keyboard.o
+ .debug_abbrev  0x0000032e       0x8c ./alumnos/leds.o
+ .debug_abbrev  0x000003ba       0xdb ./alumnos/main.o
+ .debug_abbrev  0x00000495       0x16 ./alumnos/main2.o
+ .debug_abbrev  0x000004ab       0xa5 ./alumnos/timer.o
+ .debug_abbrev  0x00000550       0x65 ./alumnos/utils.o
+
+.debug_info     0x00000000      0xfc9
+ .debug_info    0x00000000       0xdf ./alumnos/D8Led.o
+ .debug_info    0x000000df       0x84 ./alumnos/button.o
+ .debug_info    0x00000163      0x291 ./alumnos/gpio.o
+ .debug_info    0x000003f4       0x73 ./alumnos/init.o
+ .debug_info    0x00000467      0x29e ./alumnos/intcontroller.o
+ .debug_info    0x00000705       0xeb ./alumnos/keyboard.o
+ .debug_info    0x000007f0      0x150 ./alumnos/leds.o
+ .debug_info    0x00000940      0x2fe ./alumnos/main.o
+ .debug_info    0x00000c3e       0x29 ./alumnos/main2.o
+ .debug_info    0x00000c67      0x2de ./alumnos/timer.o
+ .debug_info    0x00000f45       0x84 ./alumnos/utils.o
+
+.debug_line     0x00000000      0x6d5
+ .debug_line    0x00000000       0x6f ./alumnos/D8Led.o
+ .debug_line    0x0000006f       0x80 ./alumnos/button.o
+ .debug_line    0x000000ef       0xf9 ./alumnos/gpio.o
+ .debug_line    0x000001e8       0x74 ./alumnos/init.o
+ .debug_line    0x0000025c       0xb0 ./alumnos/intcontroller.o
+ .debug_line    0x0000030c       0x97 ./alumnos/keyboard.o
+ .debug_line    0x000003a3       0x87 ./alumnos/leds.o
+ .debug_line    0x0000042a      0x126 ./alumnos/main.o
+ .debug_line    0x00000550       0x33 ./alumnos/main2.o
+ .debug_line    0x00000583       0xe2 ./alumnos/timer.o
+ .debug_line    0x00000665       0x70 ./alumnos/utils.o
+
+.debug_macinfo  0x00000000    0x2d16b
+ .debug_macinfo
+                0x00000000     0x50a4 ./alumnos/D8Led.o
+ .debug_macinfo
+                0x000050a4     0x4c12 ./alumnos/button.o
+ .debug_macinfo
+                0x00009cb6     0x4bcb ./alumnos/gpio.o
+ .debug_macinfo
+                0x0000e881     0x4bed ./alumnos/intcontroller.o
+ .debug_macinfo
+                0x0001346e     0x4be5 ./alumnos/keyboard.o
+ .debug_macinfo
+                0x00018053     0x4c0e ./alumnos/leds.o
+ .debug_macinfo
+                0x0001cc61     0x4c76 ./alumnos/main.o
+ .debug_macinfo
+                0x000218d7     0x20fc ./alumnos/main2.o
+ .debug_macinfo
+                0x000239d3     0x4bcc ./alumnos/timer.o
+ .debug_macinfo
+                0x0002859f     0x4bcc ./alumnos/utils.o
+
+.debug_loc      0x00000000      0x764
+ .debug_loc     0x00000000       0x84 ./alumnos/D8Led.o
+ .debug_loc     0x00000084       0x2c ./alumnos/button.o
+ .debug_loc     0x000000b0      0x134 ./alumnos/gpio.o
+ .debug_loc     0x000001e4      0x134 ./alumnos/intcontroller.o
+ .debug_loc     0x00000318       0x2c ./alumnos/keyboard.o
+ .debug_loc     0x00000344      0x18c ./alumnos/leds.o
+ .debug_loc     0x000004d0      0x108 ./alumnos/main.o
+ .debug_loc     0x000005d8      0x160 ./alumnos/timer.o
+ .debug_loc     0x00000738       0x2c ./alumnos/utils.o
+
+.debug_pubnames
+                0x00000000      0x32c
+ .debug_pubnames
+                0x00000000       0x43 ./alumnos/D8Led.o
+ .debug_pubnames
+                0x00000043       0x22 ./alumnos/button.o
+ .debug_pubnames
+                0x00000065       0x86 ./alumnos/gpio.o
+ .debug_pubnames
+                0x000000eb       0x7d ./alumnos/intcontroller.o
+ .debug_pubnames
+                0x00000168       0x1e ./alumnos/keyboard.o
+ .debug_pubnames
+                0x00000186       0x93 ./alumnos/leds.o
+ .debug_pubnames
+                0x00000219       0x5c ./alumnos/main.o
+ .debug_pubnames
+                0x00000275       0x9b ./alumnos/timer.o
+ .debug_pubnames
+                0x00000310       0x1c ./alumnos/utils.o
+
+.debug_pubtypes
+                0x00000000      0x1c1
+ .debug_pubtypes
+                0x00000000       0x12 ./alumnos/D8Led.o
+ .debug_pubtypes
+                0x00000012       0x1e ./alumnos/button.o
+ .debug_pubtypes
+                0x00000030       0x43 ./alumnos/gpio.o
+ .debug_pubtypes
+                0x00000073       0x43 ./alumnos/intcontroller.o
+ .debug_pubtypes
+                0x000000b6       0x12 ./alumnos/keyboard.o
+ .debug_pubtypes
+                0x000000c8       0x2c ./alumnos/leds.o
+ .debug_pubtypes
+                0x000000f4       0x82 ./alumnos/main.o
+ .debug_pubtypes
+                0x00000176       0x39 ./alumnos/timer.o
+ .debug_pubtypes
+                0x000001af       0x12 ./alumnos/utils.o
+
+.debug_aranges  0x00000000      0x140
+ .debug_aranges
+                0x00000000       0x20 ./alumnos/D8Led.o
+ .debug_aranges
+                0x00000020       0x20 ./alumnos/button.o
+ .debug_aranges
+                0x00000040       0x20 ./alumnos/gpio.o
+ .debug_aranges
+                0x00000060       0x20 ./alumnos/init.o
+ .debug_aranges
+                0x00000080       0x20 ./alumnos/intcontroller.o
+ .debug_aranges
+                0x000000a0       0x20 ./alumnos/keyboard.o
+ .debug_aranges
+                0x000000c0       0x20 ./alumnos/leds.o
+ .debug_aranges
+                0x000000e0       0x20 ./alumnos/main.o
+ .debug_aranges
+                0x00000100       0x20 ./alumnos/timer.o
+ .debug_aranges
+                0x00000120       0x20 ./alumnos/utils.o
+
+.debug_str      0x00000000      0x576
+ .debug_str     0x00000000       0x9f ./alumnos/D8Led.o
+ .debug_str     0x0000009f       0x30 ./alumnos/button.o
+                                 0x86 (size before relaxing)
+ .debug_str     0x000000cf       0xc3 ./alumnos/gpio.o
+                                0x125 (size before relaxing)
+ .debug_str     0x00000192      0x198 ./alumnos/intcontroller.o
+                                0x20e (size before relaxing)
+ .debug_str     0x0000032a       0x45 ./alumnos/keyboard.o
+                                 0xa1 (size before relaxing)
+ .debug_str     0x0000036f       0x7b ./alumnos/leds.o
+                                0x103 (size before relaxing)
+ .debug_str     0x000003ea       0xa9 ./alumnos/main.o
+                                0x2bf (size before relaxing)
+ .debug_str     0x00000493       0x13 ./alumnos/main2.o
+                                 0x57 (size before relaxing)
+ .debug_str     0x000004a6       0x9c ./alumnos/timer.o
+                                0x154 (size before relaxing)
+ .debug_str     0x00000542       0x34 ./alumnos/utils.o
+                                 0x78 (size before relaxing)
+
+.comment        0x00000000       0x2a
+ .comment       0x00000000       0x2a ./alumnos/D8Led.o
+                                 0x2b (size before relaxing)
+ .comment       0x00000000       0x2b ./alumnos/button.o
+ .comment       0x00000000       0x2b ./alumnos/gpio.o
+ .comment       0x00000000       0x2b ./alumnos/intcontroller.o
+ .comment       0x00000000       0x2b ./alumnos/keyboard.o
+ .comment       0x00000000       0x2b ./alumnos/leds.o
+ .comment       0x00000000       0x2b ./alumnos/main.o
+ .comment       0x00000000       0x2b ./alumnos/main2.o
+ .comment       0x00000000       0x2b ./alumnos/timer.o
+ .comment       0x00000000       0x2b ./alumnos/utils.o
+
+.ARM.attributes
+                0x00000000       0x30
+ .ARM.attributes
+                0x00000000       0x32 ./alumnos/D8Led.o
+ .ARM.attributes
+                0x00000032       0x32 ./alumnos/button.o
+ .ARM.attributes
+                0x00000064       0x32 ./alumnos/gpio.o
+ .ARM.attributes
+                0x00000096       0x22 ./alumnos/init.o
+ .ARM.attributes
+                0x000000b8       0x32 ./alumnos/intcontroller.o
+ .ARM.attributes
+                0x000000ea       0x32 ./alumnos/keyboard.o
+ .ARM.attributes
+                0x0000011c       0x32 ./alumnos/leds.o
+ .ARM.attributes
+                0x0000014e       0x32 ./alumnos/main.o
+ .ARM.attributes
+                0x00000180       0x32 ./alumnos/main2.o
+ .ARM.attributes
+                0x000001b2       0x32 ./alumnos/timer.o
+ .ARM.attributes
+                0x000001e4       0x32 ./alumnos/utils.o
+ .ARM.attributes
+                0x00000216       0x1a c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2\libgcc.a(_divsi3.o)
+ .ARM.attributes
+                0x00000230       0x18 c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2\libgcc.a(_dvmd_tls.o)
+
+.debug_frame    0x00000000      0x638
+ .debug_frame   0x00000000       0x70 ./alumnos/D8Led.o
+ .debug_frame   0x00000070       0x30 ./alumnos/button.o
+ .debug_frame   0x000000a0       0xf0 ./alumnos/gpio.o
+ .debug_frame   0x00000190       0xf0 ./alumnos/intcontroller.o
+ .debug_frame   0x00000280       0x34 ./alumnos/keyboard.o
+ .debug_frame   0x000002b4      0x130 ./alumnos/leds.o
+ .debug_frame   0x000003e4       0xf4 ./alumnos/main.o
+ .debug_frame   0x000004d8      0x110 ./alumnos/timer.o
+ .debug_frame   0x000005e8       0x30 ./alumnos/utils.o
+ .debug_frame   0x00000618       0x20 c:/users/daniel/downloads/eclipsearm/sourcery-g++-lite-arm-2011.03/bin/../lib/gcc/arm-none-eabi/4.5.2\libgcc.a(_divsi3.o)
