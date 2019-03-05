@@ -57,7 +57,16 @@ void timer_ISR(void)
 {
 	static int pos = 0; //contador para llevar la cuenta del dígito del buffer que toca mostrar
 
-    //COMPLETAR: Visualizar el dígito en la posición pos del buffer tmrBuffer en el display
+    //REVISAR: Visualizar el dígito en la posición pos del buffer tmrBuffer en el display
+
+	if(pos >= tmrBuffSize) {
+		pos = 0;
+		tmr_stop(TIMER0);
+		tmrBuffer = NULL;
+	} else {
+		D8Led_segment(tmrBuffer[pos]);
+		pos++;
+	}
 
 	// Si es el último dígito:
 	//      Poner pos a cero,
@@ -75,9 +84,11 @@ void printD8Led(char *buffer, int size)
 	tmrBuffer = buffer;
 	tmrBuffSize = size;
 
-	//COMPLETAR: Arrancar el TIMER0
+	//REVISAR: Arrancar el TIMER0
+	tmr_start(TIMER0);
 
-	//COMPLETAR: Esperar a que timer_ISR termine (tmrBuffer)
+	while(tmrBuffer != NULL);
+	//REVISAR: Esperar a que timer_ISR termine (tmrBuffer)
 }
 
 void keyboard_ISR(void)
@@ -88,18 +99,28 @@ void keyboard_ISR(void)
 	Delay(200);
 
 	/* Escaneo de tecla */
-	// COMPLETAR
+	// REVISAR
 
+	key = kb_scan();
 
 	if (key != -1) {
-		//COMPLETAR:
+		//REVISAR:
 		//Si la tecla pulsada es F deshabilitar interrupciones por teclado y
 		//poner keyBuffer a NULL
 
 		// Si la tecla no es F guardamos la tecla pulsada en el buffer apuntado
 		// por keybuffer mediante la llamada a la rutina push_buffer
 
+		if(key == 0xf) {
+			ic_disable(INT_EINT1);
+			keyBuffer = NULL;
+		} else {
+			push_buffer(keyBuffer, key);
+		}
+
+
 		// Actualizamos la cuenta del número de teclas pulsadas
+		keyCount++;
 
 		/* Esperar a que la tecla se suelte, consultando el registro de datos rPDATG */
 		while (!(rPDATG & 0x02));
@@ -119,12 +140,17 @@ int read_kbd(char *buffer)
 	keyBuffer = buffer;
 	keyCount = 0;
 
-	//COMPLETAR: Habilitar interrupciones por teclado
+	//REVISAR: Habilitar interrupciones por teclado
+	ic_enable(INT_EINT1);
 
-	//COMPLETAR: Esperar a que keyboard_ISR indique que se ha terminado de
+
+	//REVISAR: Esperar a que keyboard_ISR indique que se ha terminado de
 	//introducir la clave (keyBuffer)
+	while(keyBuffer != NULL);
 
-	//COMPLETAR: Devolver número de teclas pulsadas
+
+	//REVISAR: Devolver número de teclas pulsadas
+	return keyCount;
 }
 
 static int show_result()
@@ -133,9 +159,23 @@ static int show_result()
 	int i = 0;
 	char buffer[2] = {0};
 
-	// COMPLETAR: poner error a 1 si las contraseñas son distintas
+	// REVISAR: poner error a 1 si las contraseñas son distintas
 
-	// COMPLETAR
+	while(error == 0 && i < N){
+		if(passwd[i]!=guess[i]) error = 1;
+		i++;
+	}
+
+	if(error){
+		buffer[0] = 0xE;
+		buffer[1] = 0xE;
+	} else {
+		buffer[0] = 0xA;
+		buffer[1] = 0xA;
+	}
+	printD8Led(&buffer);
+
+	// REVISAR
 	// Hay que visualizar el resultado durante 2s.
 	// Si se ha acertado tenemos que mostrar una A y si no una E
 	// Como en printD8Led haremos que la ISR del timer muestre un buffer con dos
@@ -144,6 +184,7 @@ static int show_result()
 	// COMPLETAR: esperar a que la ISR del timer indique que se ha terminado
 
 	// COMPLETAR: Devolver el valor de error para indicar si se ha acertado o no
+	return error;
 }
 
 int setup(void)
