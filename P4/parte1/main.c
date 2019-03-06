@@ -41,7 +41,9 @@ enum state {
 };
 enum state gstate; //estado/fase del juego
 
-//COMPLETAR: Declaración adelantada de las ISRs de timer y teclado (las marca como ISRs)
+//REVISAR: Declaración adelantada de las ISRs de timer y teclado (las marca como ISRs)
+void timer_ISR(void) __attribute__ ((interrupt ("IRQ")));
+void keyboard_ISR(void) __attribute__ ((interrupt ("IRQ")));
 
 
 // Función que va guardando las teclas pulsadas
@@ -75,7 +77,8 @@ void timer_ISR(void)
 
 	// Si no, se apunta al siguiente dígito a visualizar (pos)
 
-	// COMPLETAR: Finalizar correctamente la ISR
+	// REVISAR: Finalizar correctamente la ISR
+	ic_cleanflag(INT_TIMER0);
 }
 
 void printD8Led(char *buffer, int size)
@@ -129,8 +132,8 @@ void keyboard_ISR(void)
 	/* Eliminar rebotes de depresiÃ³n */
 	Delay(200);
 
-	//COMPLETAR: Finalizar correctamente la ISR
-
+	//REVISAR: Finalizar correctamente la ISR
+	ic_cleanflag(INT_EINT1);
 }
 
 int read_kbd(char *buffer)
@@ -181,9 +184,10 @@ static int show_result()
 	// Como en printD8Led haremos que la ISR del timer muestre un buffer con dos
 	// caracteres A o dos caracteres E (eso durará 2s)
 
-	// COMPLETAR: esperar a que la ISR del timer indique que se ha terminado
+	// REVISAR: esperar a que la ISR del timer indique que se ha terminado
+	while(tmrBuffer!=NULL);
 
-	// COMPLETAR: Devolver el valor de error para indicar si se ha acertado o no
+	// REVISAR: Devolver el valor de error para indicar si se ha acertado o no
 	return error;
 }
 
@@ -192,24 +196,39 @@ int setup(void)
 
 	D8Led_init();
 
-	/* COMPLETAR: Configuración del timer0 para interrumpir cada segundo */
+	/* REVISAR: Configuración del timer0 para interrumpir cada segundo */
+	tmr_set_prescaler(TIMER0, 255);
+	tmr_set_divider(TIMER0, 8);
+	tmr_set_count(TIMER0,62500, 1);
 
 
 	/***************************/
-	/* COMPLETAR: Port G-configuración para generación de interrupciones externas
+	/* REVISAR: Port G-configuración para generación de interrupciones externas
 	 *         por teclado
 	 **/
+	porG_conf(1, EINT);
+	portG_eint_trig(1, FALLING);
+	portG_conf_pup(1, ENABLE);//REVISAR
 
 
 	/********************************************************************/
 
-	// COMPLETAR: Registramos las ISRs
+	// REVISAR: Registramos las ISRs
+	pISR_TIMER0 = timer_ISR;
+	pISR_EINT1 = keyboard_ISR;
 
 
 	/* Configuración del controlador de interrupciones*/
 
 
 	ic_init();
+
+	ic_conf_irq(ENABLE,  VEC);
+	ic_conf_line(INT_TIMER0, IRQ);
+	ic_conf_line(INT_EINT1, IRQ);
+	ic_enable(TIMER0);
+	ic_enable(INT_EINT1);
+
 
 	 /* Habilitamos la línea IRQ, en modo vectorizado y registramos una ISR para
 		 * la línea IRQ
@@ -238,58 +257,77 @@ int loop(void)
 
 	switch (gstate) {
 		case INIT:
+			int numteclas;
 			do {
-				//COMPLETAR:
+				D8Led_init();
+				D8Led_digit(0xC);
+				numteclas = read_kbd(passwd);
+				if(numteclas < 4)
+					D8Led_digit(0xE);
+				//REVISAR:
     			//Visualizar una C en el display
      			//Llamar a la rutina read_kbd para guardar los 4 dígitos en el buffer passwd
      			//Esta rutina devuelve el número de teclas pulsadas.
 				//Dibujar una E en el display si el número de teclas pulsadas es menor que 4
-			} while (/*permanecer en el while mientras se hayan pulsado menos de 4 teclas*/);
+			}/*permanecer en el while mientras se hayan pulsado menos de 4 teclas*/
+			while (numteclas < 4);
 
-			//COMPLETAR: Pasar al estado siguiente
-
+			//REVISAR: Pasar al estado siguiente
+			gstate = SPWD;
 			break;
 
 		case SPWD:
-
-			// COMPLETAR:
+			printD8Led(passwd, 4);
+			// REVISAR:
 			// Visualizar en el display los 4 dígitos del buffer passwd, para
 			// ello llamar a la rutina printD8Led
 			Delay(10000);
-			//COMPLETAR: Pasar al estado siguiente
-
+			//REVISAR: Pasar al estado siguiente
+			gstate = DOGUESS;
 			break;
 
 		case DOGUESS:
 			Delay(10000);
-
+			int nteclas;
 			do {
-				//COMPLETAR:
+				D8Led_digit(0xF);
+				nteclas = read_kbd(guess);
+				if(numteclas < 4)
+					D8Led_digit(0xE);
+				//REVISAR:
 				//Visualizar en el display una F
 				//Llamar a la rutina read_kbd para guardar los 4 dígitos en el buffer guess
 				//Esta rutina devuelve el número de teclas pulsadas.
 				//Dibujar una E en el display si el número de teclas pulsadas es menor que 4
-			} while (/*permanecer en el while mientras se hayan pulsado menos de 4 teclas*/);
+			} /*permanecer en el while mientras se hayan pulsado menos de 4 teclas*/
+			while (nteclas < 4);
 
-			//COMPLETAR: Pasar al estado siguiente
+				gstate = SGUESS;
+			//REVISAR: Pasar al estado siguiente
 
 			break;
 
 		case SGUESS:
-			//COMPLETAR:
+			printD8Led(guess, 4);
+
+			//REVISAR:
 			//Visualizar en el display los 4 dígitos del buffer guess,
 			//para ello llamar a la rutina printD8Led
 			Delay(10000);
-			//COMPLETAR: Pasar al estado siguiente
-
+			//REVISAR: Pasar al estado siguiente
+			gstate = GOVER;
 			break;
 
 		case GOVER:
-			//COMPLETAR:
+			int results = show_result();
+			//REVISAR:
 			//Mostrar el mensaje de acierto o error con show_result()
 			Delay(10000);
 			//Si he acertado el estado siguiente es INIT sino DOGUESS
-
+			if(results == 1)
+				gstate = DOGUESS;
+			else
+				gstate = INIT;
 			break;
 	}
 	return 0;
