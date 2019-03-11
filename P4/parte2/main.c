@@ -39,7 +39,7 @@ char readlineBuf[M];    //Buffer para guardar la linea leída del puerto serie
 struct ulconf uconf = {
 	.ired = OFF,
 	.par  = NONE,
-	.stopb = 1,
+	.stopb = ONE,
 	.wordlen = EIGHT,
 	.echo = ON,
 	.baud    = 115200,
@@ -262,8 +262,7 @@ int loop(void)
 
 				//Codigo de la parte 1
 				
-				/*permanecer en el while mientras se hayan pulsado menos de 4 teclas*/
-			} while (1);
+			} while (/*permanecer en el while mientras se hayan pulsado menos de 4 teclas*/);
 
 			//COMPLETAR: Pasar al estado siguiente
 
@@ -303,8 +302,7 @@ int loop(void)
 				 *    una E (digito 14) en el display de 8 segmentos y esperamos
 				 *    1 segundo con Delay.
 				 */
-				/* Mientras leamos menos de 4 caracteres*/
-			} while (1);
+			} while (/* Mientras leamos menos de 4 caracteres*/);
 
 			/* COMPLETAR: debemos copiar los 4 últimos caracteres de readline en
 			 * el buffer guess, haciendo la conversión de ascii-hexadecimal a valor 

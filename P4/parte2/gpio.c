@@ -11,7 +11,7 @@ int portB_conf(int pin, enum port_mode mode)
 
 	if (mode == SIGOUT){
 		rPCONB = rPCONB | (0x1 << pin);
-			// REVISAR: poner en rPCONB el bit indicado por pin a 1 para que por
+		// REVISAR: poner en rPCONB el bit indicado por pin a 1 para que por
 		// dicho pin en el puerto B salga la señal correspondiente del
 		// controlador de memoria
 
@@ -57,28 +57,28 @@ int portG_conf(int pin, enum port_mode mode)
 	switch (mode) {
 		case INPUT:
 			rPCONG = rPCONG & ~(0x3<<pos);
-			// REVISAR: poner en rPCONG 00 a partir de la posiciÃ³n pos para
-			// configurar como pin de entrada el pin indicado por el parÃ¡metro pin
+			// REVISAR: poner en rPCONG 00 a partir de la posici�n pos para
+			// configurar como pin de entrada el pin indicado por el par�metro pin
 			break;
 		case OUTPUT:
 			rPCONG = rPCONG & ~(0x2<<pos);
 			rPCONG = rPCONG | (0x1<<pos);
 
-			// REVISAR: poner en rPCONG 01 a partir de la posiciÃ³n pos para
-			// configurar como pin de salida el pin indicado por el parÃ¡metro pin
+			// REVISAR: poner en rPCONG 01 a partir de la posici�n pos para
+			// configurar como pin de salida el pin indicado por el par�metro pin
 			break;
 		case SIGOUT:
 			rPCONG = rPCONG & ~(0x3<<pos);
 			rPCONG = rPCONG | (0x2<<pos);
-			// REVISAR: poner en rPCONG 10 a partir de la posiciÃ³n pos para
+			// REVISAR: poner en rPCONG 10 a partir de la posici�n pos para
 			// que salga la seÃ±al interna correspondiente por el pin indicado
-			// por el parÃ¡metro pin
+			// por el par�metro pin
 			break;
 		case EINT:
 			rPCONG = rPCONG | (0x3<<pos);
-			// REVISAR: poner en rPCONG 11 a partir de la posiciÃ³n pos para
-			// habilitar la generaciÃ³n de interrupciones externas por el pin
-			// indicado por el parÃ¡metro pin
+			// REVISAR: poner en rPCONG 11 a partir de la posici�n pos para
+			// habilitar la generaci�n de interrupciones externas por el pin
+			// indicado por el par�metro pin
 			break;
 		default:
 			return -1;
@@ -166,7 +166,7 @@ int portG_read(int pin, enum digital* val)
 	if (rPCONG & (0x3 << pos))
 		return -1; // indica error
 
-	/*REVISAR: true si esta a 1 en rPDATG el pin indicado por el parÃ¡metro pin*/
+	/*REVISAR: true si esta a 1 en rPDATG el pin indicado por el par�metro pin*/
 	if (rPDATG & (0x1 << pin))
 		*val = HIGH;
 	else
