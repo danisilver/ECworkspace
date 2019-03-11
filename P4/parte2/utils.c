@@ -4,14 +4,14 @@
 **    utils.c  10/6/2014
 **
 **    Estructura de Computadores
-**    Dpto. de Arquitectura de Computadores y Automï¿½tica
-**    Facultad de Informï¿½tica. Universidad Complutense de Madrid
+**    Dpto. de Arquitectura de Computadores y Automática
+**    Facultad de Informática. Universidad Complutense de Madrid
 **
-**  Propï¿½sito:
+**  Propósito:
 **    Contiene las implementaciones de funciones auxiliares
 **
-**  Notas de diseï¿½o:
-**    Equivale al fichero homï¿½nimo usado en Fundamentos de Computadores 
+**  Notas de diseño:
+**    Equivale al fichero homónimo usado en Fundamentos de Computadores 
 **
 **-----------------------------------------------------------------*/
 
