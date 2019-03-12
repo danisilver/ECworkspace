@@ -29,7 +29,7 @@ void keyboard_ISR(void) __attribute__ ((interrupt ("IRQ")));
 
 void timer_ISR(void)
 {
-	//REVISAR: tomar el c√≥digo de avance de posici√≥n del led rotante de la pr√°ctica anterior
+	//REVISAR: tomar el cÛdigo de avance de posiciÛn del led rotante de la pr·ctica anterior
 	if (RL.moving) {
 		if (RL.direction) {
 			RL.position++;
@@ -61,7 +61,7 @@ void button_ISR(void)
 
 		// REVISAR: utilizando la interfaz para los leds definida en leds.h
 		// hay que apagar ambos leds
-		// Tambi√©n hay que comutar la direcci√≥n del movimiento del led rotante
+		// TambiÈn hay que comutar la direcciÛn del movimiento del led rotante
 		// representado por el campo direction de la variable RL
 	}
 
@@ -81,7 +81,7 @@ void button_ISR(void)
 	Delay(2000);
 	// borramos el flag en extintpnd
 	rEXTINTPND = rEXTINTPND & ~(buttons << 2);
-	//REVISAR: debemos borrar las peticiones de interrupci√≥n en
+	//REVISAR: debemos borrar las peticiones de interrupciÛn en
 	//EXTINTPND escribiendo un 1 en los flags que queremos borrar (los
 	//correspondientes a los pulsadores pulsados)
 }
@@ -91,7 +91,7 @@ void keyboard_ISR(void)
 {
 	int key;
 
-	/* Eliminar rebotes de presi√≥n */
+	/* Eliminar rebotes de presiÛn */
 	Delay(200);
 	
 	/* Escaneo de tecla */
@@ -129,16 +129,16 @@ void keyboard_ISR(void)
 		}
 		
 		/* Esperar a que la tecla se suelte, consultando el registro de datos */		
-		/*REVISAR: true si est√° pulsada la tecla (leer del registro rPDATG)*/
+		/*REVISAR: true si est· pulsada la tecla (leer del registro rPDATG)*/
 		while (~rPDATG & 0x1);//eint1
 	}
 
-    /* Eliminar rebotes de depresi√≥n */
+    /* Eliminar rebotes de depresiÛn */
     Delay(200);
      
     /* Borrar interrupciones pendientes */
 	//REVISAR
-	//borrar la interrupci√≥n por la l√≠nea EINT1 en el registro rI_ISPC
+	//borrar la interrupciÛn por la lÌnea EINT1 en el registro rI_ISPC
     rI_ISPC = rI_ISPC & INT_BIT(24);
 }
 
@@ -148,7 +148,7 @@ int setup(void)
 	D8Led_init();
 	D8Led_segment(RL.position);
 
-	/* Port G: configuraci√≥n para generaci√≥n de interrupciones externas,
+	/* Port G: configuraciÛn para generaciÛn de interrupciones externas,
 	 *         botones y teclado
 	 **/
 
@@ -171,10 +171,10 @@ int setup(void)
 
 	/********************************************************************/
 
-	/* Configuraci√≥n del timer */
+	/* ConfiguraciÛn del timer */
 
 
-	//COMPLETAR: tomar el c√≥digo de la segunda parte
+	//COMPLETAR: tomar el cÛdigo de la segunda parte
 
 	tmr_set_prescaler(TIMER0, 255);
 	tmr_set_divider(TIMER0, 8);
@@ -190,25 +190,25 @@ int setup(void)
 	pISR_EINT4567 = button_ISR;//REVISAR: registrar la RTI de los botones
 	pISR_EINT1    = keyboard_ISR;//REVISAR: registrar la RTI del teclado
 
-	/* Configuraci√≥n del controlador de interrupciones
-	 * Habilitamos la l√≠nea IRQ, en modo vectorizado y registramos una ISR para
-	 * la l√≠nea IRQ
-	 * Configuramos el timer 0 en modo IRQ y habilitamos esta l√≠nea
-	 * Configuramos la l√≠nea EINT4567 en modo IRQ y la habilitamos
-	 * Configuramos la l√≠nea EINT1 en modo IRQ y la habilitamos
+	/* ConfiguraciÛn del controlador de interrupciones
+	 * Habilitamos la lÌnea IRQ, en modo vectorizado y registramos una ISR para
+	 * la lÌnea IRQ
+	 * Configuramos el timer 0 en modo IRQ y habilitamos esta lÌnea
+	 * Configuramos la lÌnea EINT4567 en modo IRQ y la habilitamos
+	 * Configuramos la lÌnea EINT1 en modo IRQ y la habilitamos
 	 */
 
 	ic_init();
 
 	//REVISAR: utilizando el interfaz definido en intcontroller.h
-	//		habilitar la l√≠nea IRQ en modo vectorizado
-	//		deshabilitar la l√≠nea FIQ
-	//		configurar la l√≠nea INT_TIMER0 en modo IRQ
-	//		configurar la l√≠nea INT_EINT4567 en modo IRQ
-	//		configurar la l√≠nea INT_EINT1 en modo IRQ
-	//		habilitar la l√≠nea INT_TIMER0
-	//		habilitar la l√≠nea INT_EINT4567
-	//		habilitar la l√≠nea INT_EINT1
+	//		habilitar la lÌnea IRQ en modo vectorizado
+	//		deshabilitar la lÌnea FIQ
+	//		configurar la lÌnea INT_TIMER0 en modo IRQ
+	//		configurar la lÌnea INT_EINT4567 en modo IRQ
+	//		configurar la lÌnea INT_EINT1 en modo IRQ
+	//		habilitar la lÌnea INT_TIMER0
+	//		habilitar la lÌnea INT_EINT4567
+	//		habilitar la lÌnea INT_EINT1
 
 	/***************************************************/
 
